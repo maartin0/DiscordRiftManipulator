@@ -1,0 +1,25 @@
+{
+  "tokens": {
+    "rift0_token": {
+      "name": "rift 0",
+      "description": "A rift",
+      "creator_guild": "creator0"
+      "channels": {
+        "server0": {
+          "manager_id": "manager0",
+          "prefix": "prefix0",
+          "description": "description0",
+          "channels": [
+            "channel0"
+          ],
+        }
+      }
+    }
+  },
+
+  "servers": {
+    "server0": {
+      "channel0": "rift0_token",
+    }
+  }
+}
