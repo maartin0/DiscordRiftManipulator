@@ -51,4 +51,4 @@ If you're that kind of person, feel free to compile the source yourself. The inc
 If you find any issues feel free to open a new [issue](https://github.com/infinitewiggles/DiscordRiftManipulator/issues), or submit a new [pull request](https://github.com/infinitewiggles/DiscordRiftManipulator/pulls). Thanks for helping!
 
 ## Patreon 
-To pay for better hosting a patreon page has been requested. You can donate here to fund the bot hosting & development, thanks!
+To pay for better hosting a patreon page has been requested. You can donate [here](https://www.patreon.com/riftmanipulator) to fund the bot hosting & development, thanks!
