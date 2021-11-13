@@ -96,9 +96,7 @@ public class RiftData {
         JsonObject channels;
         try {
             channels = tokens.getAsJsonObject(token).getAsJsonObject("channels");
-        } catch (NullPointerException e) {
-            return null;
-        }
+        } catch (NullPointerException ignored) { return null; }
 
         HashMap<String, List<String>> result = new HashMap<>();
         for (String server_id : channels.keySet()) {

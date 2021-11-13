@@ -15,6 +15,26 @@ public class Listener extends ListenerAdapter {
         event.getHook().sendMessage(reply).setEphemeral(true).queue();
     }
 
+    public void handle_warn(String guild_id, String channel_id, boolean warn) {
+        if (warn) {
+            Guild g = Main.jda.getGuildById(guild_id);
+            if (g == null) return;
+
+            TextChannel c = g.getTextChannelById(channel_id);
+            if (c == null) return;
+
+            warn_guild_owner(g, c);
+        } else if (Main.warned_servers.containsKey(guild_id) && Main.warned_servers.get(guild_id).contains(channel_id)) {
+            List<String> updated_list = Main.warned_servers.get(guild_id);
+
+            if (updated_list.size() == 1) {
+                Main.warned_servers.remove(guild_id);
+            } else {
+                updated_list.remove(channel_id);
+            }
+        }
+    }
+
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
         if (event.getGuild() == null || event.getUser().isBot() || event.getUser().isSystem()) { return; }
@@ -100,34 +120,12 @@ public class Listener extends ListenerAdapter {
         String prefix = Main.riftData.tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(gid).get("prefix").getAsString();
 
         User author = event.getAuthor();
-        Message message = event.getMessage();
         String message_content = Main.webhookHandler.get_message_content(event.getMessage());
 
-        for (String guild_id : channels.keySet()) {
-            for (String channel_id : channels.get(guild_id)) {
-                if (!(guild_id.equals(gid) && channel_id.equals(cid))) {
-                    boolean result = Main.webhookHandler.send_webhook_message(guild_id, channel_id, author, message, prefix, message_content);
-
-                    if (!result) {
-                        Guild g = Main.jda.getGuildById(guild_id);
-                        if (g == null) continue;
-
-                        TextChannel c = g.getTextChannelById(channel_id);
-                        if (c == null) continue;
-
-                        warn_guild_owner(g, c);
-                    } else if (Main.warned_servers.containsKey(guild_id) && Main.warned_servers.get(guild_id).contains(channel_id)) {
-                        List<String> updated_list = Main.warned_servers.get(guild_id);
-
-                        if (updated_list.size() == 1) {
-                            Main.warned_servers.remove(guild_id);
-                        } else {
-                            updated_list.remove(channel_id);
-                        }
-                    }
-                }
-            }
-        }
+        channels.keySet().forEach((String guild_id) -> channels.get(guild_id).forEach((String channel_id) -> {
+            if (guild_id.equals(gid) && channel_id.equals(cid)) return;
+            Main.webhookHandler.send_webhook_message(guild_id, channel_id, author, prefix, message_content);
+        }));
     }
 
     boolean has_invalid_permissions(SlashCommandEvent event, Permission permission) {

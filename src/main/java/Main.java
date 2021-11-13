@@ -19,7 +19,7 @@ public class Main {
     public static final Integer max_description_length = 200;
     public static String valid_prefix_regex;
 
-    public static List<String> debug_administrators = new ArrayList<String>();
+    public static List<String> debug_administrators = new ArrayList<>();
 
     public final static List<Permission> required_permissions = Arrays.asList(Permission.VIEW_CHANNEL, Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MANAGE_CHANNEL, Permission.MANAGE_WEBHOOKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_ATTACH_FILES, Permission.MESSAGE_HISTORY, Permission.MESSAGE_EXT_EMOJI, Permission.USE_SLASH_COMMANDS);
 
@@ -29,6 +29,7 @@ public class Main {
     public static RiftData riftData;
     public static WebhookHandler webhookHandler;
     public static ConfigHandler configHandler;
+    public static Listener listener;
 
     static void refresh_global_commands() {
         CommandListUpdateAction commands = jda.updateCommands();
@@ -94,7 +95,8 @@ public class Main {
         }
 
         try {
-            jda = JDABuilder.createLight(token).addEventListeners(new Listener()).build();
+            listener = new Listener();
+            jda = JDABuilder.createLight(token).addEventListeners(listener).build();
         } catch (LoginException e) {
             System.out.println("Unable to login! Please check the token and try again. Exiting...");
             return;

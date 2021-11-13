@@ -4,10 +4,8 @@ import club.minnced.discord.webhook.send.*;
 import net.dv8tion.jda.api.entities.*;
 
 import java.util.List;
-import java.util.concurrent.CompletionException;
 
 public class WebhookHandler {
-
     String replace_mentions(String msg, List<User> mentions) {
         String result = msg;
         for (User u : mentions) {
@@ -31,14 +29,18 @@ public class WebhookHandler {
         if (!msg.getContentRaw().equals("")) {
             Message referenced = msg.getReferencedMessage();
             if (referenced != null) {
-                result.append("> ");
-                for (String line : referenced.getContentRaw().replace("\n", "\n> ").split("\n")) {
-                    if (!line.contains("> >")) {
+                boolean last_was_reply = false;
+                for (String line : referenced.getContentRaw().split("\n")) {
+                    if (line.startsWith("> ")) {
+                        last_was_reply = true;
+                    } else if (last_was_reply) {
+                        last_was_reply = false;
+                    } else {
+                        result.append("> ");
                         result.append(line);
-                        result.append("\n");
                     }
                 }
-                result.append(" - ");
+                result.append("\n - ");
                 result.append(referenced.getAuthor().getName());
                 result.append("#");
                 result.append(referenced.getAuthor().getDiscriminator());
@@ -56,12 +58,12 @@ public class WebhookHandler {
         return replace_mentions(result.toString(), msg.getMentionedUsers());
     }
 
-    public boolean send_webhook_message(String guild_id, String channel_id, User mimic_user, Message msg, String prefix, String message_content) {
+    public void send_webhook_message(String guild_id, String channel_id, User mimic_user, String prefix, String message_content) {
         Guild guild = Main.jda.getGuildById(guild_id);
-        if (guild == null) return false;
+        if (guild == null) return;
 
         TextChannel channel = guild.getTextChannelById(channel_id);
-        if (channel == null) return false;
+        if (channel == null) return;
 
         Webhook hook = null;
 
@@ -69,7 +71,7 @@ public class WebhookHandler {
         try {
             hooks = channel.retrieveWebhooks().complete();
         } catch (Exception e) {
-            return false;
+            return;
         }
 
         for (Webhook webhook : hooks) {
@@ -91,22 +93,19 @@ public class WebhookHandler {
 
         JDAWebhookClient client = WebhookClientBuilder.fromJDA(hook).buildJDA();
 
-        String mesg = message_content;
+        if (message_content.length() > 0) {
+            WebhookMessageBuilder webhookMessageBuilder = new WebhookMessageBuilder();
+            webhookMessageBuilder.setAvatarUrl(mimic_user.getAvatarUrl());
+            webhookMessageBuilder.setUsername(name.toString());
+            webhookMessageBuilder.setContent(message_content);
+            webhookMessageBuilder.setAllowedMentions(new AllowedMentions());
 
-        if (mesg.length() > 0) {
-            WebhookMessageBuilder wmesg = new WebhookMessageBuilder();
-            wmesg.setAvatarUrl(mimic_user.getAvatarUrl());
-            wmesg.setUsername(name.toString());
-            wmesg.setContent(mesg);
-            wmesg.setAllowedMentions(new AllowedMentions());
+            client.send(webhookMessageBuilder.build())
+                .whenCompleteAsync(
+                        (message, exception) -> Main.listener.handle_warn(guild_id, channel_id, (exception != null))
+                );
 
-            try {
-                client.send(wmesg.build()).join();
-            } catch (CompletionException e) {
-                return false;
-            }
-
-        } return true;
+        }
     }
 
 }
