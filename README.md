@@ -2,8 +2,12 @@
 Discord Rift Manipulator is a discord bot written in Java using [DV8FromTheWorld/JDA](https://github.com/DV8FromTheWorld/JDA). It enables you to create 'Rifts' which link text channels across guilds together. 
 
 ## Invite
-You can invite the bot to your server using [this](https://discord.com/api/oauth2/authorize?client_id=888800676535218237&permissions=536996880&scope=bot%20applications.commands) url, or copy and paste the URL below:  
-[https://discord.com/api/oauth2/authorize?client_id=888800676535218237&permissions=536996880&scope=bot%20applications.commands](https://discord.com/api/oauth2/authorize?client_id=888800676535218237&permissions=536996880&scope=bot%20applications.commands)
+You can invite the bot to your server using this url:  
+https://discord.com/api/oauth2/authorize?client_id=888800676535218237&permissions=536996880&scope=bot%20applications.commands
+
+## Support Server
+Here is a link to the support server:
+https://discord.gg/fRxDrquQjA
 
 ## Usage
 ### Commands
