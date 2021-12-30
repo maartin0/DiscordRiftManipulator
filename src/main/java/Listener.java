@@ -1,5 +1,6 @@
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -10,6 +11,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public class Listener extends ListenerAdapter {
+
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        Main.update_status();
+    }
 
     public void command_reply(SlashCommandEvent event, String reply) {
         event.getHook().sendMessage(reply).setEphemeral(true).queue();
@@ -85,6 +91,8 @@ public class Listener extends ListenerAdapter {
 
     @Override
     public void onGuildJoin(@NotNull GuildJoinEvent event) {
+        Main.update_status();
+
         StringBuilder message = new StringBuilder();
         message.append("I was just added to the guild called '");
         message.append(event.getGuild().getName());
@@ -101,6 +109,8 @@ public class Listener extends ListenerAdapter {
 
     @Override
     public void onGuildLeave(@NotNull GuildLeaveEvent event) {
+        Main.update_status();
+
         Main.riftData.clear_guild_rifts(event.getGuild().getId());
     }
 

@@ -2,6 +2,7 @@ import com.google.gson.JsonArray;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -83,6 +84,16 @@ public class Main {
         );
 
         commands.queue();
+    }
+
+    public static void update_status() {
+        jda.getPresence().setActivity(
+                Activity.watching(
+                        "over " +
+                        jda.getGuilds().size() +
+                        " guilds"
+                )
+        );
     }
 
     public static void main(String[] args) throws IOException {

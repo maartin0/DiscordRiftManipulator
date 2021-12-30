@@ -21,10 +21,10 @@ public class RiftData {
     JsonObject servers;
 
     public RiftData() throws IOException {
-        reload();
+        load();
     }
 
-    void reload() throws IOException {
+    void load() throws IOException {
         if (Files.exists(Path.of(token_path))) {
             tokens = JsonParser.parseString(
                     Files.readString(

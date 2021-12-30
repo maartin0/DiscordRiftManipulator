@@ -35,11 +35,17 @@ public class WebhookHandler {
                         last_was_reply = true;
                     } else if (last_was_reply) {
                         last_was_reply = false;
-                    } else {
+                    } else if (!line.equals("")) {
                         result.append("> ");
                         result.append(line);
                     }
                 }
+
+                for (Message.Attachment a : referenced.getAttachments()) {
+                    result.append("\n> ");
+                    result.append(a.getUrl());
+                }
+
                 result.append("\n - ");
                 result.append(referenced.getAuthor().getName());
                 result.append("#");
