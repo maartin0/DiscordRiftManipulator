@@ -2,8 +2,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.dv8tion.jda.api.entities.TextChannel;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,11 +11,11 @@ import java.util.*;
 
 public class RiftData {
 
-    static final String token_path = "data/token_data.json";
-    static final String server_path = "data/server_data.json";
+    static final String TOKEN_PATH = "data/token_data.json";
+    static final String SERVER_PATH = "data/server_data.json";
 
-    static final String ascii_uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    static final Integer simple_recurse_limit = 20;
+    static final String ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static final Integer SIMPLE_RECURSE_LIMIT = 20;
 
     JsonObject tokens;
     JsonObject servers;
@@ -25,18 +25,18 @@ public class RiftData {
     }
 
     void load() throws IOException {
-        if (Files.exists(Path.of(token_path))) {
+        if (Files.exists(Path.of(TOKEN_PATH))) {
             tokens = JsonParser.parseString(
                     Files.readString(
-                            Path.of(token_path)
+                            Path.of(TOKEN_PATH)
                     )
             ).getAsJsonObject();
         }
 
-        if (Files.exists(Path.of(server_path))) {
+        if (Files.exists(Path.of(SERVER_PATH))) {
             servers = JsonParser.parseString(
                     Files.readString(
-                            Path.of(server_path)
+                            Path.of(SERVER_PATH)
                     )
             ).getAsJsonObject();
         }
@@ -53,46 +53,46 @@ public class RiftData {
 
     public void save() throws IOException {
         Files.write(
-                Path.of(token_path),
+                Path.of(TOKEN_PATH),
                 tokens.toString().getBytes()
         );
         Files.write(
-                Path.of(server_path),
+                Path.of(SERVER_PATH),
                 servers.toString().getBytes()
         );
     }
 
-    public boolean is_invalid_prefix(String prefix) {
+    public boolean isInvalidPrefix(String prefix) {
         for (char c : prefix.toCharArray()) {
             if (!String.valueOf(c).matches(Main.valid_prefix_regex)) {
                 return true;
             }
         }
 
-        return (prefix.length() > Main.max_prefix_length || prefix.length() < 1);
+        return (prefix.length() > Main.MAX_PREFIX_LENGTH || prefix.length() < 1);
     }
 
-    public String get_prefix(String phrase) {
+    public String getPrefix(String phrase) {
         StringBuilder result = new StringBuilder();
         for (String word : phrase.split(" ")) {
             if (word.length() == 0) continue;
 
             String start_char = String.valueOf(word.toUpperCase(Locale.ROOT).charAt(0));
-            if (ascii_uppercase.contains(start_char)) {
+            if (ASCII_UPPERCASE.contains(start_char)) {
                 result.append(start_char);
             }
         }
 
-        if (is_invalid_prefix(result.toString())) return "ERR";
+        if (isInvalidPrefix(result.toString())) return "ERR";
 
         return result.toString();
     }
 
-    public String gen_token() {
+    public String genToken() {
         return UUID.randomUUID().toString();
     }
 
-    public HashMap<String, List<String>> get_rift_channels(String token) {
+    public HashMap<String, List<String>> getRiftChannels(String token) {
         JsonObject channels;
         try {
             channels = tokens.getAsJsonObject(token).getAsJsonObject("channels");
@@ -111,7 +111,7 @@ public class RiftData {
         return result;
     }
 
-    public String get_rift_name(String token) {
+    public String getRiftName(String token) {
         try {
             return tokens.getAsJsonObject(token).get("name").getAsString();
         } catch (NullPointerException e) {
@@ -119,7 +119,7 @@ public class RiftData {
         }
     }
 
-    public boolean channel_has_rift(String guild_id, String channel_id) {
+    public boolean channelHasRift(String guild_id, String channel_id) {
         try {
             if (servers.keySet().contains(guild_id)) {
                 return servers.getAsJsonObject(guild_id).has(channel_id);
@@ -131,46 +131,46 @@ public class RiftData {
         return false;
     }
 
-    @Nullable public String get_description(String guild_id, String channel_id) {
+    public String getDescription(String guildID, String channel_id) {
         String token;
         try {
-            token = servers.getAsJsonObject(guild_id).get(channel_id).getAsString();
+            token = servers.getAsJsonObject(guildID).get(channel_id).getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
             return null;
         }
 
-        String mname;
+        String riftName;
         String value;
         try {
-            mname = tokens.getAsJsonObject(token).get("name").getAsString();
-            value = tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(guild_id).get("description").getAsString();
+            riftName = tokens.getAsJsonObject(token).get("name").getAsString();
+            value = tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(guildID).get("description").getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
             return null;
         }
 
         StringBuilder result = new StringBuilder();
-        result.append(mname);
+        result.append(riftName);
         result.append("\n\n");
         result.append(value);
         result.append("\n\n");
         result.append("=".repeat(30));
         result.append("\n\n");
 
-        HashMap<String, List<String>> channels = get_rift_channels(token);
+        HashMap<String, List<String>> channels = getRiftChannels(token);
 
-        LinkedHashMap<String, String> server_texts = new LinkedHashMap<>();
+        LinkedHashMap<String, String> serverTexts = new LinkedHashMap<>();
 
-        for (String server_id : channels.keySet()) {
-            StringBuilder server_text = new StringBuilder();
+        for (String serverID : channels.keySet()) {
+            StringBuilder serverText = new StringBuilder();
             String name;
             String prefix;
             String invite;
 
             try {
-                name = Main.jda.getGuildById(server_id).getName();
-                JsonObject sobject = tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(server_id);
+                name = Main.jda.getGuildById(serverID).getName();
+                JsonObject sobject = tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(serverID);
                 prefix = sobject.get("prefix").getAsString();
                 invite = sobject.get("invite").getAsString();
             } catch (NullPointerException e) {
@@ -178,33 +178,33 @@ public class RiftData {
                 return null;
             }
 
-            server_text.append("[");
-            server_text.append(prefix);
-            server_text.append("] - ");
-            server_text.append(name);
+            serverText.append("[");
+            serverText.append(prefix);
+            serverText.append("] - ");
+            serverText.append(name);
 
             if (!(invite.equals("") || invite.equals(" "))) {
-                server_text.append(": ");
-                server_text.append("https://discord.gg/");
-                server_text.append(invite);
+                serverText.append(": ");
+                serverText.append("https://discord.gg/");
+                serverText.append(invite);
             }
 
-            server_text.append("\n");
+            serverText.append("\n");
 
-            server_texts.put(name, server_text.toString());
+            serverTexts.put(name, serverText.toString());
         }
 
-        server_texts.keySet().stream().sorted().forEach(a -> result.append(server_texts.get(a)));
+        serverTexts.keySet().stream().sorted().forEach(a -> result.append(serverTexts.get(a)));
 
         return result.toString();
     }
 
-    public String create_rift_data(String name, String description, String creator_id, String server_id, String channel_id) {
-        String token = gen_token();
+    public String createRiftData(String name, String description, String creatorID, String serverID, String channelID) {
+        String token = genToken();
         int recursions = 0;
         while (tokens.keySet().contains(token)) {
-            if (recursions > simple_recurse_limit) return null;
-            token = gen_token();
+            if (recursions > SIMPLE_RECURSE_LIMIT) return null;
+            token = genToken();
             recursions += 1;
         }
 
@@ -212,37 +212,37 @@ public class RiftData {
         JsonObject rift = new JsonObject();
             rift.addProperty("name", name);
             rift.addProperty("description", description);
-            rift.addProperty("creator_guild", server_id);
+            rift.addProperty("creator_guild", serverID);
 
             JsonObject channels = new JsonObject();
-                JsonObject servers_obj = new JsonObject();
-                    servers_obj.addProperty("manager_id", creator_id);
-                    servers_obj.addProperty("prefix", get_prefix(Objects.requireNonNull(Main.jda.getGuildById(server_id)).getName()));
-                    servers_obj.addProperty("description", description);
-                    servers_obj.addProperty("invite", " ");
+                JsonObject serversObj = new JsonObject();
+                    serversObj.addProperty("manager_id", creatorID);
+                    serversObj.addProperty("prefix", getPrefix(Objects.requireNonNull(Main.jda.getGuildById(serverID)).getName()));
+                    serversObj.addProperty("description", description);
+                    serversObj.addProperty("invite", " ");
 
-                    JsonArray channel_array = new JsonArray();
-                        channel_array.add(channel_id);
+                    JsonArray channelArray = new JsonArray();
+                        channelArray.add(channelID);
 
-                    servers_obj.add("channels", channel_array);
+                    serversObj.add("channels", channelArray);
 
-                channels.add(server_id, servers_obj);
+                channels.add(serverID, serversObj);
 
             rift.add("channels", channels);
 
         tokens.add(token, rift);
 
         // Update server config
-        JsonObject server_map_obj;
-        if (servers.keySet().contains(server_id)) {
-            server_map_obj = servers.getAsJsonObject(server_id);
+        JsonObject serverMapObj;
+        if (servers.keySet().contains(serverID)) {
+            serverMapObj = servers.getAsJsonObject(serverID);
         } else {
-            server_map_obj = new JsonObject();
+            serverMapObj = new JsonObject();
         }
 
-        server_map_obj.addProperty(channel_id, token);
+        serverMapObj.addProperty(channelID, token);
 
-        servers.add(server_id, server_map_obj);
+        servers.add(serverID, serverMapObj);
 
         try {
             save();
@@ -253,36 +253,36 @@ public class RiftData {
         return token;
     }
 
-    public String add_rift_data(String token, String manager_id, String server_id, String channel_id) {
+    public String addRiftData(String token, String managerID, String serverID, String channelID) {
         if (!tokens.keySet().contains(token)) return null;
         JsonObject channels_object = tokens.getAsJsonObject(token).getAsJsonObject("channels");
 
-        if (!channels_object.keySet().contains(server_id)) {
+        if (!channels_object.keySet().contains(serverID)) {
             JsonObject obj = new JsonObject();
-            obj.addProperty("manager_id", manager_id);
-            obj.addProperty("prefix", get_prefix(Main.jda.getGuildById(server_id).getName()));
+            obj.addProperty("manager_id", managerID);
+            obj.addProperty("prefix", getPrefix(Main.jda.getGuildById(serverID).getName()));
             obj.addProperty("description", tokens.getAsJsonObject(token).get("description").getAsString());
             obj.addProperty("invite", " ");
             obj.add("channels", new JsonArray());
-            channels_object.add(server_id, obj);
+            channels_object.add(serverID, obj);
         }
 
-        JsonArray channels = channels_object.getAsJsonObject(server_id).getAsJsonArray("channels");
+        JsonArray channels = channels_object.getAsJsonObject(serverID).getAsJsonArray("channels");
 
-        if (array_contains(channels, channel_id)) return null;
+        if (arrayContains(channels, channelID)) return null;
 
-        channels.add(channel_id);
+        channels.add(channelID);
 
-        JsonObject server_map_obj;
-        if (servers.keySet().contains(server_id)) {
-            server_map_obj = servers.getAsJsonObject(server_id);
+        JsonObject serverMapObj;
+        if (servers.keySet().contains(serverID)) {
+            serverMapObj = servers.getAsJsonObject(serverID);
         } else {
-            server_map_obj = new JsonObject();
+            serverMapObj = new JsonObject();
         }
 
-        server_map_obj.addProperty(channel_id, token);
+        serverMapObj.addProperty(channelID, token);
 
-        if (!servers.keySet().contains(server_id)) servers.add(server_id, server_map_obj);
+        if (!servers.keySet().contains(serverID)) servers.add(serverID, serverMapObj);
 
         try {
             save();
@@ -293,18 +293,18 @@ public class RiftData {
         return tokens.getAsJsonObject(token).get("description").getAsString();
     }
 
-    boolean array_contains(JsonArray channels, String channel_id) {
+    boolean arrayContains(JsonArray channels, String channelID) {
         for (JsonElement e : channels) {
-            if (e.getAsString().equals(channel_id)) return true;
+            if (e.getAsString().equals(channelID)) return true;
         }
         return false;
     }
 
-    public boolean delete_rift_data(String guild_id, String channel_id) {
+    public boolean deleteRiftData(String guildID, String channelID) {
         String token;
 
         try {
-            token = servers.getAsJsonObject(guild_id).get(channel_id).getAsString();
+            token = servers.getAsJsonObject(guildID).get(channelID).getAsString();
         } catch (NullPointerException e) {
             return false;
         }
@@ -316,7 +316,7 @@ public class RiftData {
         JsonArray channels;
         try {
             rift = tokens.getAsJsonObject(token);
-            server = rift.getAsJsonObject("channels").getAsJsonObject(guild_id);
+            server = rift.getAsJsonObject("channels").getAsJsonObject(guildID);
             channels = server.getAsJsonArray("channels");
         } catch (NullPointerException e) {
             e.printStackTrace();
@@ -324,25 +324,25 @@ public class RiftData {
         }
 
         for (int i = 0; i < channels.size(); i++) {
-            if (channels.get(i).getAsString().equals(channel_id)) {
+            if (channels.get(i).getAsString().equals(channelID)) {
                 channels.remove(i);
                 break;
             }
         }
         if (channels.size() == 0) {
-            rift.getAsJsonObject("channels").remove(guild_id);
+            rift.getAsJsonObject("channels").remove(guildID);
         }
 
         if (rift.getAsJsonObject("channels").keySet().size() == 0) {
             tokens.remove(token);
         }
 
-        JsonObject server_obj = servers.getAsJsonObject(guild_id);
+        JsonObject server_obj = servers.getAsJsonObject(guildID);
 
-        server_obj.remove(channel_id);
+        server_obj.remove(channelID);
 
         if (server_obj.keySet().size() == 0) {
-            servers.remove(guild_id);
+            servers.remove(guildID);
         }
 
         try {
@@ -354,20 +354,27 @@ public class RiftData {
         return true;
     }
 
-    public void clear_guild_rifts(String guild_id) {
-        JsonObject guild_obj = servers.getAsJsonObject(guild_id);
-        for (String channel_id : guild_obj.keySet()) {
-            delete_rift_data(guild_id, channel_id);
+    public void clearGuildRifts(String guildID) {
+        JsonObject guildObj = servers.getAsJsonObject(guildID);
+        for (String channelID : guildObj.keySet()) {
+            deleteRiftData(guildID, channelID);
         }
     }
 
-    public boolean modify_rift_data(String server_id, String channel_id, String new_prefix, String new_description, String new_invite) {
+    public String getChannelToken(TextChannel channel) {
+        String guildID = channel.getGuild().getId();
+        String channelID = channel.getId();
+        if (!channelHasRift(guildID, channelID)) return null;
+        return Main.riftData.servers.getAsJsonObject(guildID).get(channelID).getAsString();
+    }
+
+    public boolean modifyRiftData(String serverID, String channelID, String newPrefix, String newDescription, String newInvite) {
         try {
-            String token = servers.getAsJsonObject(server_id).get(channel_id).getAsString();
-            JsonObject server_obj = tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(server_id);
-            if (!(new_prefix == null)) server_obj.addProperty("prefix", new_prefix);
-            if (!(new_description == null)) server_obj.addProperty("description", new_description);
-            if (!(new_invite == null))server_obj.addProperty("invite", new_invite);
+            String token = servers.getAsJsonObject(serverID).get(channelID).getAsString();
+            JsonObject server_obj = tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(serverID);
+            if (!(newPrefix == null)) server_obj.addProperty("prefix", newPrefix);
+            if (!(newDescription == null)) server_obj.addProperty("description", newDescription);
+            if (!(newInvite == null)) server_obj.addProperty("invite", newInvite);
         } catch (NullPointerException e) {
             e.printStackTrace();
             return false;
@@ -382,7 +389,7 @@ public class RiftData {
         return true;
     }
 
-    public boolean modify_global_rift_data(String token, String name, String description) {
+    public boolean modifyGlobalRiftData(String token, String name, String description) {
         try {
             JsonObject token_obj = tokens.getAsJsonObject(token);
             token_obj.addProperty("name", name);

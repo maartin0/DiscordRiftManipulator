@@ -6,112 +6,46 @@ import net.dv8tion.jda.api.entities.*;
 import java.util.List;
 
 public class WebhookHandler {
-    String replace_mentions(String msg, List<User> mentions) {
-        String result = msg;
-        for (User u : mentions) {
-            String id = u.getId();
-            String replacement_text = "@" + u.getName() + "#" + u.getDiscriminator();
+    public Webhook getChannelWebhook(TextChannel channel) throws RuntimeException {
+        List<Webhook> hooks = channel.retrieveWebhooks().complete();
 
-            result = result.replace(
-                    "<@!" + id + ">",
-                    replacement_text
-            ).replace(
-                    "<@" + id + ">",
-                    replacement_text
-            );
-        }
-
-        return result.replace("@", "@ ");
+        return hooks
+                .stream()
+                .filter(webhook -> webhook.getName().equals("Rift Handler"))
+                .findFirst()
+                .orElse(channel.createWebhook("Rift Handler").complete());
     }
 
-    public String get_message_content(Message msg) {
-        StringBuilder result = new StringBuilder();
-        if (!msg.getContentRaw().equals("")) {
-            Message referenced = msg.getReferencedMessage();
-            if (referenced != null) {
-                boolean last_was_reply = false;
-                for (String line : referenced.getContentRaw().split("\n")) {
-                    if (line.startsWith("> ")) {
-                        last_was_reply = true;
-                    } else if (last_was_reply) {
-                        last_was_reply = false;
-                    } else if (!line.equals("")) {
-                        result.append("> ");
-                        result.append(line);
-                    }
-                }
+    public void sendWebhookMessages(TextChannel origin, Message message, List<TextChannel> targets) {
+        String messageContent = MessageFormatter.getMessageContent(message);
+        if (messageContent.length() == 0) return;
 
-                for (Message.Attachment a : referenced.getAttachments()) {
-                    result.append("\n> ");
-                    result.append(a.getUrl());
-                }
+        Member member = message.getMember();
 
-                result.append("\n - ");
-                result.append(referenced.getAuthor().getName());
-                result.append("#");
-                result.append(referenced.getAuthor().getDiscriminator());
-                result.append("\n");
-            }
+        WebhookMessageBuilder webhookMessageBuilder = new WebhookMessageBuilder();
+        webhookMessageBuilder.setAvatarUrl(member.getUser().getAvatarUrl());
+        webhookMessageBuilder.setUsername(MessageFormatter.getPrefixedName(origin, member));
+        webhookMessageBuilder.setContent(messageContent);
 
-            result.append(msg.getContentRaw());
-        }
+        webhookMessageBuilder.setAllowedMentions(new AllowedMentions());
 
-        for (Message.Attachment a : msg.getAttachments()) {
-            result.append("\n");
-            result.append(a.getUrl());
-        }
+        WebhookMessage webhookMessage = webhookMessageBuilder.build();
 
-        return replace_mentions(result.toString(), msg.getMentionedUsers());
+        targets.forEach((TextChannel channel) -> sendWebhookMessage(channel, webhookMessage));
     }
 
-    public void send_webhook_message(String guild_id, String channel_id, User mimic_user, String prefix, String message_content) {
-        Guild guild = Main.jda.getGuildById(guild_id);
-        if (guild == null) return;
-
-        TextChannel channel = guild.getTextChannelById(channel_id);
-        if (channel == null) return;
-
-        Webhook hook = null;
-
-        List<Webhook> hooks;
+    public void sendWebhookMessage(TextChannel channel, WebhookMessage message) {
+        Webhook hook;
         try {
-            hooks = channel.retrieveWebhooks().complete();
-        } catch (Exception e) {
+            hook = getChannelWebhook(channel);
+        } catch (RuntimeException e) {
             return;
         }
 
-        for (Webhook webhook : hooks) {
-            if (webhook.getName().equals("Rift Handler")) {
-                hook = webhook;
-                break;
-            }
-        }
-
-        if (hook == null) {
-            hook = channel.createWebhook("Rift Handler").complete();
-        }
-
-        StringBuilder name = new StringBuilder();
-        name.append("[");
-        name.append(prefix);
-        name.append("] ");
-        name.append(mimic_user.getName());
-
-        JDAWebhookClient client = WebhookClientBuilder.fromJDA(hook).buildJDA();
-
-        if (message_content.length() > 0) {
-            WebhookMessageBuilder webhookMessageBuilder = new WebhookMessageBuilder();
-            webhookMessageBuilder.setAvatarUrl(mimic_user.getAvatarUrl());
-            webhookMessageBuilder.setUsername(name.toString());
-            webhookMessageBuilder.setContent(message_content);
-            webhookMessageBuilder.setAllowedMentions(new AllowedMentions());
-
-            client.send(webhookMessageBuilder.build())
-                .whenCompleteAsync(
-                        (message, exception) -> Main.listener.handle_warn(guild_id, channel_id, (exception != null))
-                );
-
-        }
+        WebhookClientBuilder.fromJDA(hook).buildJDA().send(message)
+            .whenCompleteAsync(
+                    (errorMessage, exception) -> Main.listener.handleWarn(channel, (exception != null))
+            );
     }
 
 }

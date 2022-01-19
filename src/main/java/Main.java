@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -14,11 +13,14 @@ import java.util.*;
 
 public class Main {
 
-    public static final String unknown_error_message = "An unknown error occurred. Please check your details, try again or contact an administrator.";
+    public static final String UNKNOWN_ERROR_MESSAGE = "An unknown error occurred. Please check your details, try again or contact an administrator.";
 
-    public static final Integer max_prefix_length = 10;
-    public static final Integer max_description_length = 200;
+    public static final Integer MAX_PREFIX_LENGTH = 10;
+    public static final Integer MAX_DESCRIPTION_LENGTH = 200;
     public static String valid_prefix_regex;
+
+    public static final Integer BACKWARD_SEARCH_SKIP = 50;
+    public static final Integer BACKWARD_SEARCH_MAX = 300;
 
     public static List<String> debug_administrators = new ArrayList<>();
 
@@ -33,57 +35,29 @@ public class Main {
     public static Listener listener;
 
     static void refresh_global_commands() {
-        CommandListUpdateAction commands = jda.updateCommands();
-
-        commands.addCommands(
+        jda.updateCommands().addCommands(
                 new CommandData("create", "Creates a new rift with the supplied name and description. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "name", "The name of the rift.").setRequired(true))
-                        .addOptions(new OptionData(OptionType.STRING, "description", "The description of the rift.").setRequired(true))
-        );
-
-        commands.addCommands(
-                new CommandData("leave", "Leaves the rift and removes it from the current channel. (Permission Requirement: Administrator)")
-        );
-
-        commands.addCommands(
+                        .addOptions(new OptionData(OptionType.STRING, "description", "The description of the rift.").setRequired(true)),
+                new CommandData("leave", "Leaves the rift and removes it from the current channel. (Permission Requirement: Administrator)"),
                 new CommandData("delete-message", "Deletes the supplied message from every channel. (Permission Requirement: Manage Messages)")
-                    .addOptions(new OptionData(OptionType.STRING, "message_id", "The ID of the message to delete.").setRequired(true))
-        );
-
-        commands.addCommands(
+                        .addOptions(new OptionData(OptionType.STRING, "message_id", "The ID of the message to delete.").setRequired(true)),
                 new CommandData("join", "Joins an existing rift with the supplied token. (Permission Requirement: Administrator)")
-                        .addOptions(new OptionData(OptionType.STRING, "token", "The rift token.").setRequired(true))
-        );
-
-        commands.addCommands(
+                        .addOptions(new OptionData(OptionType.STRING, "token", "The rift token.").setRequired(true)),
                 new CommandData("global_modify", "Modifies global channel settings. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "name", "The name of the rift.").setRequired(true))
-                        .addOptions(new OptionData(OptionType.STRING, "description", "The description of the rift.").setRequired(true))
-        );
-
-        commands.addCommands(
+                        .addOptions(new OptionData(OptionType.STRING, "description", "The description of the rift.").setRequired(true)),
                 new CommandData("modify", "Modifies local channel settings. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "prefix", "The prefix of the channel.").setRequired(false))
                         .addOptions(new OptionData(OptionType.STRING, "description", "The description of the channel.").setRequired(false))
-                        .addOptions(new OptionData(OptionType.STRING, "invite_code", "The guild invite code. (not the URL)").setRequired(false))
-        );
-
-        commands.addCommands(
+                        .addOptions(new OptionData(OptionType.STRING, "invite_code", "The guild invite code. (not the URL)").setRequired(false)),
                 new CommandData("set_prefix", "Sets the channel prefix. (Permission Requirement: Administrator)")
-                        .addOptions(new OptionData(OptionType.STRING, "prefix", "The prefix of the channel.").setRequired(true))
-        );
-
-        commands.addCommands(
+                        .addOptions(new OptionData(OptionType.STRING, "prefix", "The prefix of the channel.").setRequired(true)),
                 new CommandData("set_description", "Sets the channel description. (Permission Requirement: Administrator)")
-                        .addOptions(new OptionData(OptionType.STRING, "description", "The description of the channel.").setRequired(true))
-        );
-
-        commands.addCommands(
+                        .addOptions(new OptionData(OptionType.STRING, "description", "The description of the channel.").setRequired(true)),
                 new CommandData("set_invite", "Sets the guild invite code. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "invite_code", "The guild invite code. (not the URL)").setRequired(true))
-        );
-
-        commands.queue();
+        ).queue();
     }
 
     public static void update_status() {
@@ -124,7 +98,7 @@ public class Main {
         }
 
         if (configHandler.config.get("update_commands").getAsBoolean()) {
-            refresh_global_commands();
+            new CommandUpdate(jda.getSelfUser().getApplicationId(), token);
             configHandler.config.addProperty("update_commands", false);
             configHandler.save();
         }

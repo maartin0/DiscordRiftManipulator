@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -17,26 +18,22 @@ public class Listener extends ListenerAdapter {
         Main.update_status();
     }
 
-    public void command_reply(SlashCommandEvent event, String reply) {
+    public void commandReply(SlashCommandEvent event, String reply) {
         event.getHook().sendMessage(reply).setEphemeral(true).queue();
     }
 
-    public void handle_warn(String guild_id, String channel_id, boolean warn) {
+    public void handleWarn(TextChannel c, boolean warn) {
+        String guildID = c.getGuild().getId();
+        String channelID = c.getId();
         if (warn) {
-            Guild g = Main.jda.getGuildById(guild_id);
-            if (g == null) return;
-
-            TextChannel c = g.getTextChannelById(channel_id);
-            if (c == null) return;
-
-            warn_guild_owner(g, c);
-        } else if (Main.warned_servers.containsKey(guild_id) && Main.warned_servers.get(guild_id).contains(channel_id)) {
-            List<String> updated_list = Main.warned_servers.get(guild_id);
+            warnGuildOwner(c);
+        } else if (Main.warned_servers.containsKey(guildID) && Main.warned_servers.get(guildID).contains(channelID)) {
+            List<String> updated_list = Main.warned_servers.get(guildID);
 
             if (updated_list.size() == 1) {
-                Main.warned_servers.remove(guild_id);
+                Main.warned_servers.remove(guildID);
             } else {
-                updated_list.remove(channel_id);
+                updated_list.remove(channelID);
             }
         }
     }
@@ -47,44 +44,44 @@ public class Listener extends ListenerAdapter {
 
         event.deferReply(true).queue();
 
-        if (!check_channel_for_permissions(event)) return;
+        if (!checkChannelForPermissions(event)) return;
 
         switch (event.getName()) {
             case "create" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                create_rift(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                createRift(event);
             }
             case "leave" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                leave_rift(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                leaveRift(event);
             }
             case "delete-message" -> {
-                if (has_invalid_permissions(event, Permission.MESSAGE_MANAGE)) { return; }
-                delete_message(event);
+                if (hasInvalidPermissions(event, Permission.MESSAGE_MANAGE)) { return; }
+                deleteMessage(event);
             }
             case "global_modify" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                modify_rift(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                modifyRift(event);
             }
             case "modify" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                modify_channel(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                modifyChannel(event);
             }
             case "set_prefix" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                set_prefix(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                setPrefix(event);
             }
             case "set_description" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                set_description(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                setDescription(event);
             }
             case "set_invite" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                set_invite(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                setInvite(event);
             }
             case "join" -> {
-                if (has_invalid_permissions(event, Permission.ADMINISTRATOR)) { return; }
-                join_rift(event);
+                if (hasInvalidPermissions(event, Permission.ADMINISTRATOR)) { return; }
+                joinRift(event);
             }
         }
     }
@@ -111,44 +108,31 @@ public class Listener extends ListenerAdapter {
     public void onGuildLeave(@NotNull GuildLeaveEvent event) {
         Main.update_status();
 
-        Main.riftData.clear_guild_rifts(event.getGuild().getId());
+        Main.riftData.clearGuildRifts(event.getGuild().getId());
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.isFromType(ChannelType.PRIVATE) || event.getAuthor().isBot() || event.getAuthor().isSystem()) { return; }
 
-        String gid = event.getGuild().getId();
-        String cid = event.getChannel().getId();
+        TextChannel origin = event.getTextChannel();
+        String token = Main.riftData.getChannelToken(origin);
+        if (Objects.isNull(token)) return;
 
-        if (!Main.riftData.channel_has_rift(gid, cid)) { return; }
-
-        String token = Main.riftData.servers.getAsJsonObject(gid).get(cid).getAsString();
-
-        HashMap<String, List<String>> channels = Main.riftData.get_rift_channels(token);
-
-        String prefix = Main.riftData.tokens.getAsJsonObject(token).getAsJsonObject("channels").getAsJsonObject(gid).get("prefix").getAsString();
-
-        User author = event.getAuthor();
-        String message_content = Main.webhookHandler.get_message_content(event.getMessage());
-
-        channels.keySet().forEach((String guild_id) -> channels.get(guild_id).forEach((String channel_id) -> {
-            if (guild_id.equals(gid) && channel_id.equals(cid)) return;
-            Main.webhookHandler.send_webhook_message(guild_id, channel_id, author, prefix, message_content);
-        }));
+        Main.webhookHandler.sendWebhookMessages(event.getTextChannel(), event.getMessage(), MessageLocator.getRiftChannels(token, origin));
     }
 
-    boolean has_invalid_permissions(SlashCommandEvent event, Permission permission) {
+    boolean hasInvalidPermissions(SlashCommandEvent event, Permission permission) {
         if (Objects.requireNonNull(event.getMember()).hasPermission(permission) || Main.debug_administrators.contains(event.getUser().getId())) {
             return false;
         } else {
-            command_reply(event, "You don't have permission to use this command!");
+            commandReply(event, "You don't have permission to use this command!");
             return true;
         }
     }
 
-    boolean refresh_channel_description(String guild_id, String channel_id) {
-        String description = Main.riftData.get_description(guild_id, channel_id);
+    boolean refreshChannelDescription(String guild_id, String channel_id) {
+        String description = Main.riftData.getDescription(guild_id, channel_id);
 
         if (description == null) return false;
 
@@ -161,16 +145,16 @@ public class Listener extends ListenerAdapter {
         return true;
     }
 
-    void refresh_rift_descriptions(String token) {
-        HashMap<String, List<String>> channels = Main.riftData.get_rift_channels(token);
+    void refreshRiftDescriptions(String token) {
+        HashMap<String, List<String>> channels = Main.riftData.getRiftChannels(token);
         for (String server_id : channels.keySet()) {
             for (String channel_id : channels.get(server_id)) {
-                refresh_channel_description(server_id, channel_id);
+                refreshChannelDescription(server_id, channel_id);
             }
         }
     }
 
-    boolean check_channel_for_permissions(SlashCommandEvent event) {
+    boolean checkChannelForPermissions(SlashCommandEvent event) {
         Guild guild = event.getGuild();
         GuildChannel channel = event.getGuildChannel();
 
@@ -183,7 +167,7 @@ public class Listener extends ListenerAdapter {
 
         for (Permission permission : Main.required_permissions) {
             if (!self.hasPermission(channel, permission)) {
-                command_reply(event, "I need the "+permission.getName()+" permission to function correctly! Exiting...");
+                commandReply(event, "I need the %s permission to function correctly! Exiting...".formatted(permission.getName()));
                 return false;
             }
         }
@@ -191,7 +175,8 @@ public class Listener extends ListenerAdapter {
         return true;
     }
 
-    void warn_guild_owner(Guild g, TextChannel c) {
+    void warnGuildOwner(TextChannel c) {
+        Guild g = c.getGuild();
         String guild_id = g.getId();
         String channel_id = c.getId();
 
@@ -211,23 +196,9 @@ public class Listener extends ListenerAdapter {
         }
     }
 
-    boolean delete_message_from_channel(TextChannel channel, Message message) {
-        List<Message> history = channel.getHistory().retrievePast(100).complete();
-        String content = Main.webhookHandler.get_message_content(message);
-
-        for (Message m : history) {
-            if (m.getContentRaw().equals(content)) {
-                m.delete().queue();
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    void create_rift(SlashCommandEvent event) {
-        if (Main.riftData.channel_has_rift(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, "A rift already exists in this channel!");
+    void createRift(SlashCommandEvent event) {
+        if (Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "A rift already exists in this channel!");
             return;
         }
 
@@ -239,29 +210,29 @@ public class Listener extends ListenerAdapter {
             description = event.getOption("description").getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            command_reply(event, Main.unknown_error_message + " Error: Unable to get command arguments.");
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE + " Error: Unable to get command arguments.");
             return;
         }
 
-        String token = Main.riftData.create_rift_data(name, description, event.getUser().getId(), Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId());
+        String token = Main.riftData.createRiftData(name, description, event.getUser().getId(), Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId());
         if (token == null) {
-            command_reply(event, Main.unknown_error_message);
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
-        boolean result = refresh_channel_description(event.getGuild().getId(), event.getChannel().getId());
+        boolean result = refreshChannelDescription(event.getGuild().getId(), event.getChannel().getId());
         if (!result) {
-            command_reply(event, "Unable to update channel description, continuing anyway, your rift token is: `" + token + "`. Send this to other servers to create your rift!");
+            commandReply(event, "Unable to update channel description, continuing anyway, your rift token is: `" + token + "`. Send this to other servers to create your rift!");
             return;
         }
 
-        command_reply(event, "Success! Your rift token is: `" + token + "`. Send this to other servers to create your rift!");
+        commandReply(event, "Success! Your rift token is: `" + token + "`. Send this to other servers to create your rift!");
 
         event.getUser().openPrivateChannel().complete().sendMessage("You created a rift called \"" + name + "\". It's token is: `" + token + "` Keep this safe! Anyone who gets access to it can join your rift!").queue();
     }
 
-    void join_rift(SlashCommandEvent event) {
-        if (Main.riftData.channel_has_rift(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, "A rift already exists in this channel!");
+    void joinRift(SlashCommandEvent event) {
+        if (Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "A rift already exists in this channel!");
             return;
         }
 
@@ -269,307 +240,254 @@ public class Listener extends ListenerAdapter {
         try {
             token = event.getOption("token").getAsString();
         } catch (NullPointerException e) {
-            command_reply(event, Main.unknown_error_message + "Error: Unable to get command arguments.");
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE + "Error: Unable to get command arguments.");
             return;
         }
 
-        String description = Main.riftData.add_rift_data(token, event.getUser().getId(), event.getGuild().getId(), event.getChannel().getId());
+        String description = Main.riftData.addRiftData(token, event.getUser().getId(), event.getGuild().getId(), event.getChannel().getId());
 
         if (description == null) {
-            command_reply(event, "Error: Invalid token!");
+            commandReply(event, "Error: Invalid token!");
             return;
         }
 
-        String name = Main.riftData.get_rift_name(token);
+        String name = Main.riftData.getRiftName(token);
 
         if (name == null) {
-            command_reply(event, Main.unknown_error_message);
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
-        refresh_rift_descriptions(token);
+        refreshRiftDescriptions(token);
 
-        command_reply(event, "You have successfully joined the \""+name+"\" rift!");
+        commandReply(event, "You have successfully joined the \""+name+"\" rift!");
     }
 
-    void delete_message(SlashCommandEvent event) {
-        String gid = event.getGuild().getId();
-        String cid = event.getChannel().getId();
+    void deleteMessage(SlashCommandEvent event) {
+        String message_id = Objects.requireNonNull(event.getOption("message_id")).getAsString();
 
-        String message_id;
-        try {
-            message_id = event.getOption("message_id").getAsString();
-        } catch (NullPointerException e) {
-            command_reply(event, Main.unknown_error_message + "Error: Unable to get message arguments.");
+        Message origin = MessageLocator.getMessageFromChannel(
+                (Message message) -> message.getId().equals(message_id),
+                event.getTextChannel()
+        );
+
+        if (Objects.isNull(origin)) {
+            commandReply(event, String.format("Could not find message, is the ID correct or is it older than %s messages?", Main.BACKWARD_SEARCH_MAX));
             return;
         }
 
-        MessageHistory history = event.getChannel().getHistory();
-        history.retrievePast(100).complete();
-        Message message = null;
+        MessageLocator.getAllMessages(origin).stream().map(Message::delete).forEach(AuditableRestAction::queue);
 
-        for (Message message1 : history.getRetrievedHistory()) {
-            if (message1.getId().equals(message_id)) {
-                message = message1;
-                break;
-            }
-        }
-
-        if (message == null) {
-            command_reply(event, "Invalid message ID (or the message is too old)");
-            return;
-        }
-
-        if (!Main.riftData.channel_has_rift(gid, cid)) { return; }
-
-        String token = Main.riftData.servers.getAsJsonObject(gid).get(cid).getAsString();
-
-        HashMap<String, List<String>> channels = Main.riftData.get_rift_channels(token);
-
-        int count = 1;
-        int total = 1;
-
-        for (String guild_id : channels.keySet()) {
-            Guild g = Main.jda.getGuildById(guild_id);
-            if (g == null) continue;
-            for (String channel_id : channels.get(guild_id)) {
-                if (!(guild_id.equals(gid) && channel_id.equals(cid))) {
-                    TextChannel t = g.getTextChannelById(channel_id);
-                    if (t == null) continue;
-
-                    boolean result = delete_message_from_channel(t, message);
-                    total += 1;
-                    if (result) count += 1;
-                }
-            }
-        }
-
-        message.delete().queue();
-
-        String reply = "Successfully deleted " +
-                count +
-                "/" +
-                total +
-                " instances of that message.";
-
-        command_reply(event, reply);
+        commandReply(event, "Successfully deleted the supplied message.");
     }
 
-    void leave_rift(SlashCommandEvent event) {
-        if (!Main.riftData.channel_has_rift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
-            command_reply(event, "This text channel doesn't have any rifts associated with it!");
+    void leaveRift(SlashCommandEvent event) {
+        if (!Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "This text channel doesn't have any rifts associated with it!");
             return;
         }
 
-        if (!Main.riftData.delete_rift_data(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, Main.unknown_error_message);
+        if (!Main.riftData.deleteRiftData(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
         event.getTextChannel().getManager().setTopic("").queue();
 
-        command_reply(event, "The rift has been successfully removed from this channel!");
+        commandReply(event, "The rift has been successfully removed from this channel!");
     }
 
-    void modify_channel(SlashCommandEvent event) {
-        if (!Main.riftData.channel_has_rift(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, "This channel doesn't contain a multiverse!");
+    void modifyChannel(SlashCommandEvent event) {
+        if (!Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "This channel doesn't contain a multiverse!");
             return;
         }
 
-        String new_prefix = null;
-        String new_description = null;
-        String new_invite = null;
+        String newPrefix = null;
+        String newDescription = null;
+        String newInvite = null;
 
         try {
-            if (event.getOption("prefix") != null) new_prefix = event.getOption("prefix").getAsString();
-            if (event.getOption("description") != null) new_description = event.getOption("description").getAsString();
-            if (event.getOption("invite_code") != null) new_invite = event.getOption("invite_code").getAsString();
+            if (event.getOption("prefix") != null) newPrefix = event.getOption("prefix").getAsString();
+            if (event.getOption("description") != null) newDescription = event.getOption("description").getAsString();
+            if (event.getOption("invite_code") != null) newInvite = event.getOption("invite_code").getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            command_reply(event, Main.unknown_error_message);
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
-        if (new_invite == null && new_description == null && new_prefix == null) {
-            command_reply(event, "No arguments provided!");
+        if (newInvite == null && newDescription == null && newPrefix == null) {
+            commandReply(event, "No arguments provided!");
             return;
         }
 
-        if (new_prefix != null && Main.riftData.is_invalid_prefix(new_prefix)) {
-            command_reply(event, "Invalid prefix! The maximum length is "+Main.max_prefix_length+" and the prefix can only include A-z, 0-9, \"-\", \"_\", and accented characters.");
+        if (newPrefix != null && Main.riftData.isInvalidPrefix(newPrefix)) {
+            commandReply(event, "Invalid prefix! The maximum length is "+Main.MAX_PREFIX_LENGTH +" and the prefix can only include A-z, 0-9, \"-\", \"_\", and accented characters.");
             return;
         }
 
-        if (new_description != null && (new_description.length() < 1 || new_description.length() > Main.max_description_length)) {
-            command_reply(event, "The description length must be in the range of 1 ≤ " + "x ≤ " + Main.max_description_length);
+        if (newDescription != null && (newDescription.length() < 1 || newDescription.length() > Main.MAX_DESCRIPTION_LENGTH)) {
+            commandReply(event, "The description length must be in the range of 1 ≤ " + "x ≤ " + Main.MAX_DESCRIPTION_LENGTH);
             return;
         }
 
-        if (new_invite != null && (new_invite.contains("/") || new_invite.contains("\\") || new_invite.contains(":"))) {
-            command_reply(event, "Invalid invite code. Make sure you're supplying the **code**, not the **URL**.");
+        if (newInvite != null && (newInvite.contains("/") || newInvite.contains("\\") || newInvite.contains(":"))) {
+            commandReply(event, "Invalid invite code. Make sure you're supplying the **code**, not the **URL**.");
             return;
         }
 
-        if (!Main.riftData.modify_rift_data(event.getGuild().getId(), event.getChannel().getId(), new_prefix, new_description, new_invite)) {
-            command_reply(event, Main.unknown_error_message);
+        if (!Main.riftData.modifyRiftData(event.getGuild().getId(), event.getChannel().getId(), newPrefix, newDescription, newInvite)) {
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
         String token = Main.riftData.servers.getAsJsonObject(event.getGuild().getId()).get(event.getChannel().getId()).getAsString();
 
-        refresh_rift_descriptions(token);
+        refreshRiftDescriptions(token);
 
-        command_reply(event, "Successfully Modified!");
+        commandReply(event, "Successfully Modified!");
     }
 
-    void set_prefix(SlashCommandEvent event) {
-        if (!Main.riftData.channel_has_rift(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, "This channel doesn't contain a rift!");
+    void setPrefix(SlashCommandEvent event) {
+        if (!Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "This channel doesn't contain a rift!");
             return;
         }
 
-        String new_prefix = null;
+        String newPrefix = null;
 
         try {
-            if (event.getOption("prefix") != null) new_prefix = event.getOption("prefix").getAsString();
+            if (event.getOption("prefix") != null) newPrefix = event.getOption("prefix").getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            command_reply(event, Main.unknown_error_message);
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
-        if (new_prefix == null) {
-            command_reply(event, "No arguments provided!");
+        if (newPrefix == null) {
+            commandReply(event, "No arguments provided!");
             return;
         }
 
-        if (Main.riftData.is_invalid_prefix(new_prefix)) {
-            command_reply(event, "Invalid prefix! The maximum length is "+Main.max_prefix_length+" and the prefix can only include A-z, 0-9, \"-\", \"_\", and accented characters.");
+        if (Main.riftData.isInvalidPrefix(newPrefix)) {
+            commandReply(event, "Invalid prefix! The maximum length is " + Main.MAX_PREFIX_LENGTH + " and the prefix can only include A-z, 0-9, \"-\", \"_\", and accented characters.");
             return;
         }
 
-        if (!Main.riftData.modify_rift_data(event.getGuild().getId(), event.getChannel().getId(), new_prefix, null, null)) {
-            command_reply(event, Main.unknown_error_message);
+        if (!Main.riftData.modifyRiftData(event.getGuild().getId(), event.getChannel().getId(), newPrefix, null, null)) {
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
         String token = Main.riftData.servers.getAsJsonObject(event.getGuild().getId()).get(event.getChannel().getId()).getAsString();
 
-        refresh_rift_descriptions(token);
+        refreshRiftDescriptions(token);
 
-        command_reply(event, "Successfully Modified!");
+        commandReply(event, "Successfully Modified!");
     }
 
-    void set_description(SlashCommandEvent event) {
-        if (!Main.riftData.channel_has_rift(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, "This channel doesn't contain a rift!");
+    void setDescription(SlashCommandEvent event) {
+        if (!Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "This channel doesn't contain a rift!");
             return;
         }
 
-        String new_description = null;
+        String newDescription = null;
 
         try {
-            if (event.getOption("description") != null) new_description = event.getOption("description").getAsString();
+            if (event.getOption("description") != null) newDescription = event.getOption("description").getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            command_reply(event, Main.unknown_error_message);
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
-        if (new_description == null) {
-            command_reply(event, "No arguments provided!");
+        if (newDescription == null) {
+            commandReply(event, "No arguments provided!");
             return;
         }
 
-        if (new_description.length() < 1 || new_description.length() > Main.max_description_length) {
-            command_reply(event, "The description length must be in the range of 1 ≤ " + "x ≤ " + Main.max_description_length);
+        if (newDescription.length() < 1 || newDescription.length() > Main.MAX_DESCRIPTION_LENGTH) {
+            commandReply(event, "The description length must be in the range of 1 ≤ " + "x ≤ " + Main.MAX_DESCRIPTION_LENGTH);
             return;
         }
 
-        if (!Main.riftData.modify_rift_data(event.getGuild().getId(), event.getChannel().getId(), null, new_description, null)) {
-            command_reply(event, Main.unknown_error_message);
+        if (!Main.riftData.modifyRiftData(event.getGuild().getId(), event.getChannel().getId(), null, newDescription, null)) {
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
-        String token = Main.riftData.servers.getAsJsonObject(event.getGuild().getId()).get(event.getChannel().getId()).getAsString();
+        refreshChannelDescription(event.getGuild().getId(), event.getChannel().getId());
 
-        refresh_channel_description(event.getGuild().getId(), event.getChannel().getId());
-
-        command_reply(event, "Successfully Modified!");
+        commandReply(event, "Successfully Modified!");
     }
 
-    void set_invite(SlashCommandEvent event) {
-        if (!Main.riftData.channel_has_rift(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, "This channel doesn't contain a rift!");
+    void setInvite(SlashCommandEvent event) {
+        if (!Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "This channel doesn't contain a rift!");
             return;
         }
 
-        String new_invite = null;
+        String newInvite = null;
 
         try {
-            if (event.getOption("invite_code") != null) new_invite = event.getOption("invite_code").getAsString();
+            if (event.getOption("invite_code") != null) newInvite = event.getOption("invite_code").getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            command_reply(event, Main.unknown_error_message);
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
-        if (new_invite == null) {
-            command_reply(event, "No arguments provided!");
-            return;
+        if (newInvite == null) {
+            commandReply(event, "No arguments provided!");
+        } else if (newInvite.contains("/") || newInvite.contains("\\") || newInvite.contains(":")) {
+            commandReply(event, "Invalid invite code. Make sure you're supplying the **code**, not the **URL**.");
+        } else if (!Main.riftData.modifyRiftData(event.getGuild().getId(), event.getChannel().getId(), null, null, newInvite)) {
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
+        } else {
+            String token = Main.riftData.servers.getAsJsonObject(event.getGuild().getId()).get(event.getChannel().getId()).getAsString();
+
+            refreshRiftDescriptions(token);
+
+            commandReply(event, "Successfully Modified!");
         }
 
-        if (new_invite.contains("/") || new_invite.contains("\\") || new_invite.contains(":")) {
-            command_reply(event, "Invalid invite code. Make sure you're supplying the **code**, not the **URL**.");
-            return;
-        }
-
-        if (!Main.riftData.modify_rift_data(event.getGuild().getId(), event.getChannel().getId(), null, null, new_invite)) {
-            command_reply(event, Main.unknown_error_message);
-            return;
-        }
-
-        String token = Main.riftData.servers.getAsJsonObject(event.getGuild().getId()).get(event.getChannel().getId()).getAsString();
-
-        refresh_rift_descriptions(token);
-
-        command_reply(event, "Successfully Modified!");
     }
 
-    void modify_rift(SlashCommandEvent event) {
-        if (!Main.riftData.channel_has_rift(event.getGuild().getId(), event.getChannel().getId())) {
-            command_reply(event, "This channel doesn't contain a rift!");
+    void modifyRift(SlashCommandEvent event) {
+        if (!Main.riftData.channelHasRift(event.getGuild().getId(), event.getChannel().getId())) {
+            commandReply(event, "This channel doesn't contain a rift!");
             return;
         }
 
         String token;
-        String guild_id;
+        String guildID;
 
         try {
             token = Main.riftData.servers.getAsJsonObject(event.getGuild().getId()).get(event.getChannel().getId()).getAsString();
-            guild_id = Main.riftData.tokens.getAsJsonObject(token).get("creator_guild").getAsString();
+            guildID = Main.riftData.tokens.getAsJsonObject(token).get("creator_guild").getAsString();
         } catch (NullPointerException e) {
             e.printStackTrace();
-            command_reply(event, Main.unknown_error_message + " Error: Unable to get command arguments.");
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE + " Error: Unable to get command arguments.");
             return;
         }
 
-        if (!event.getGuild().getId().equals(guild_id)) {
-            command_reply(event, "Your guild doesn't have permission to run this command!");
+        if (!event.getGuild().getId().equals(guildID)) {
+            commandReply(event, "Your guild doesn't have permission to run this command!");
             return;
         }
 
         String name = event.getOption("name").getAsString();
         String description = event.getOption("description").getAsString();
 
-        if (!Main.riftData.modify_global_rift_data(token, name, description)) {
-            command_reply(event, Main.unknown_error_message);
+        if (!Main.riftData.modifyGlobalRiftData(token, name, description)) {
+            commandReply(event, Main.UNKNOWN_ERROR_MESSAGE);
             return;
         }
 
-        refresh_rift_descriptions(token);
+        refreshRiftDescriptions(token);
 
-        command_reply(event, "Successfully modified rift!");
+        commandReply(event, "Successfully modified rift!");
     }
 }
