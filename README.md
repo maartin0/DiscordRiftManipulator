@@ -2,12 +2,7 @@
 Discord Rift Manipulator is a discord bot written in Java using [DV8FromTheWorld/JDA](https://github.com/DV8FromTheWorld/JDA). It enables you to create 'Rifts' which link text channels across guilds together. 
 
 ## Invite
-You can invite the bot to your server using this url:  
-https://discord.com/api/oauth2/authorize?client_id=888800676535218237&permissions=536996880&scope=bot%20applications.commands
-
-## Support Server
-Here is a link to the support server:
-https://discord.gg/fRxDrquQjA
+Click [here](https://discord.com/api/oauth2/authorize?client_id=888800676535218237&permissions=536996880&scope=bot%20applications.commands) to invite the bot to your server.  
 
 ## Usage
 ### Commands
@@ -48,11 +43,11 @@ After downloading the latest jar, run it with JRE 15 or later. A **config.json**
 
 **update_commands** - Usually you shouldn't need to touch this. Turning it to true will cause discord to refresh the global commands once.
 
-#### Compilation
-If you're that kind of person, feel free to compile the source yourself. The included maven `pom.xml` should be all you need to build it.
-
 ## Contribute
-If you find any issues feel free to open a new [issue](https://github.com/infinitewiggles/DiscordRiftManipulator/issues), or submit a new [pull request](https://github.com/infinitewiggles/DiscordRiftManipulator/pulls). Thanks for helping!
+If you find any issues feel free to open a new [issue](https://github.com/maartin0/DiscordRiftManipulator/issues), or submit a new [pull request](https://github.com/maartin0/DiscordRiftManipulator/pulls). Thanks!
+
+## Discord
+Click [here](https://discord.gg/fRxDrquQjA) to join the discord support server.
 
 ## Patreon 
-To pay for better hosting a patreon page has been requested. You can donate [here](https://www.patreon.com/riftmanipulator) to fund the bot hosting & development, thanks!
+You can donate [here](https://www.patreon.com/riftmanipulator) to fund the bot hosting & development, 
