@@ -4,23 +4,25 @@ import club.minnced.discord.webhook.send.*;
 import net.dv8tion.jda.api.entities.*;
 
 import java.util.List;
+import java.util.Objects;
 
 public class WebhookHandler {
-    public Webhook getChannelWebhook(TextChannel channel) throws RuntimeException {
+    public JDAWebhookClient getChannelWebhook(TextChannel channel) {
         List<Webhook> hooks = channel.retrieveWebhooks().complete();
 
-        return hooks
-                .stream()
-                .filter(webhook -> webhook.getName().equals("Rift Handler"))
-                .findFirst()
-                .orElse(channel.createWebhook("Rift Handler").complete());
+        Webhook hook;
+        if (hooks.size() == 0) hook = channel.createWebhook("Rift Handler").complete();
+        else hook = hooks.get(0);
+
+        return WebhookClientBuilder.fromJDA(hook).buildJDA();
     }
 
-    public void sendWebhookMessages(TextChannel origin, Message message, List<TextChannel> targets) {
+    WebhookMessage getWebhookMessage(Message message, TextChannel origin) {
         String messageContent = MessageFormatter.getMessageContent(message);
-        if (messageContent.length() == 0) return;
+        if (messageContent.length() == 0) return null;
 
         Member member = message.getMember();
+        if (Objects.isNull(member)) return null;
 
         WebhookMessageBuilder webhookMessageBuilder = new WebhookMessageBuilder();
         webhookMessageBuilder.setAvatarUrl(member.getUser().getAvatarUrl());
@@ -29,23 +31,37 @@ public class WebhookHandler {
 
         webhookMessageBuilder.setAllowedMentions(new AllowedMentions());
 
-        WebhookMessage webhookMessage = webhookMessageBuilder.build();
+        return webhookMessageBuilder.build();
+    }
 
+    public void sendWebhookMessages(TextChannel origin, Message message, List<TextChannel> targets) {
+        WebhookMessage webhookMessage = getWebhookMessage(message, origin);
+        if (Objects.isNull(webhookMessage)) return;
         targets.forEach((TextChannel channel) -> sendWebhookMessage(channel, webhookMessage));
     }
 
-    public void sendWebhookMessage(TextChannel channel, WebhookMessage message) {
-        Webhook hook;
-        try {
-            hook = getChannelWebhook(channel);
-        } catch (RuntimeException e) {
-            return;
-        }
+    void sendWebhookMessage(TextChannel channel, WebhookMessage message) {
+        JDAWebhookClient client = getChannelWebhook(channel);
+        if (Objects.isNull(client)) return;
 
-        WebhookClientBuilder.fromJDA(hook).buildJDA().send(message)
+        client.send(message)
             .whenCompleteAsync(
                     (errorMessage, exception) -> Main.listener.handleWarn(channel, (exception != null))
             );
+    }
+
+    public void editWebhookMessages(Message message) {
+        MessageLocator.getAllMessages(message, true).forEach((message1 -> editWebhookMessage(message, message1)));
+    }
+
+    void editWebhookMessage(Message newMessage, Message oldMessage) {
+        if (!oldMessage.isWebhookMessage()) return;
+
+        JDAWebhookClient client = getChannelWebhook(oldMessage.getTextChannel());
+        if (Objects.isNull(client)) return;
+
+        WebhookMessage webhookMessage = getWebhookMessage(newMessage, newMessage.getTextChannel());
+        client.edit(oldMessage.getIdLong(), webhookMessage);
     }
 
 }

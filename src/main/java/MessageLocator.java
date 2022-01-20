@@ -43,6 +43,10 @@ public class MessageLocator {
     }
 
     public static List<Message> getAllMessages(Message origin) {
+        return getAllMessages(origin, false);
+    }
+
+    public static List<Message> getAllMessages(Message origin, boolean ignoreContent) {
         TextChannel originChannel = origin.getTextChannel();
         String token = Main.riftData.getChannelToken(originChannel);
         if (Objects.isNull(token) || !origin.isFromGuild() || origin.getAuthor().isSystem()) return Collections.emptyList();
@@ -93,12 +97,12 @@ public class MessageLocator {
         List<TextChannel> channels = getRiftChannels(token, null);
 
         return channels.stream()
-                .map((TextChannel channel) -> getMessageFromChannel((Message message) ->
+                .map((TextChannel channel) -> getMessageFromChannel((Message message) -> (
                         (message.getAuthor().isBot()
                         && message.getAuthor().getName().equals(prefixedName)
-                        && message.getContentRaw().equals(bodyContent))
+                        && (message.getContentRaw().equals(bodyContent) || ignoreContent))
                         || (message.getAuthor().getName().equals(plainName)
-                        && message.getContentRaw().contains(originContent)), channel))
+                        && (message.getContentRaw().contains(originContent) || ignoreContent))), channel))
                 .filter(Objects::nonNull)
                 .toList();
     }

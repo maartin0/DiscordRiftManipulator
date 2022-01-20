@@ -30,7 +30,7 @@ public class MessageFormatter {
     }
 
     public static String getPrefixedName(TextChannel channel, Member member) {
-        return String.format("[%s] %s", getPrefix(channel), member.getUser().getName());
+        return String.format("%s: %s", getPrefix(channel), member.getUser().getName());
     }
 
     public static String getNameID(User user) {

@@ -34,7 +34,7 @@ public class Main {
     public static ConfigHandler configHandler;
     public static Listener listener;
 
-    static void refresh_global_commands() {
+    static void updateCommands() {
         jda.updateCommands().addCommands(
                 new CommandData("create", "Creates a new rift with the supplied name and description. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "name", "The name of the rift.").setRequired(true))
@@ -98,7 +98,7 @@ public class Main {
         }
 
         if (configHandler.config.get("update_commands").getAsBoolean()) {
-            new CommandUpdate(jda.getSelfUser().getApplicationId(), token);
+            updateCommands();
             configHandler.config.addProperty("update_commands", false);
             configHandler.save();
         }
