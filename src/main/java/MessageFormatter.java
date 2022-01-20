@@ -1,5 +1,4 @@
 import net.dv8tion.jda.api.entities.*;
-import org.apache.commons.collections4.ArrayStack;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -43,7 +42,7 @@ public class MessageFormatter {
         Arrays.stream(reply.getContentRaw().split("\n")).filter(s -> !s.startsWith("> ")).forEach(content::add);
         reply.getAttachments().forEach((Message.Attachment a) -> content.add(String.format("<%s>", a.getUrl())));
         content.add(MessageFormatter.getNameID(reply.getAuthor()));
-        return String.format("> \n%s", String.join("\n> ", content));
+        return String.format("> %s", String.join("\n> ", content));
     }
 
     public static String getMessageContent(Message message) {
