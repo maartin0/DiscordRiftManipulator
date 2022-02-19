@@ -2,13 +2,19 @@ import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.*;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.exceptions.MissingAccessException;
 
 import java.util.List;
 import java.util.Objects;
 
 public class WebhookHandler {
     public JDAWebhookClient getChannelWebhook(TextChannel channel) {
-        List<Webhook> hooks = channel.retrieveWebhooks().complete();
+        List<Webhook> hooks;
+        try {
+            hooks = channel.retrieveWebhooks().complete();
+        } catch (MissingAccessException e) {
+            return null;
+        }
 
         Webhook hook;
         if (hooks.size() == 0) hook = channel.createWebhook("Rift Handler").complete();
@@ -42,7 +48,7 @@ public class WebhookHandler {
 
     void sendWebhookMessage(TextChannel channel, WebhookMessage message) {
         JDAWebhookClient client = getChannelWebhook(channel);
-        if (Objects.isNull(client)) return;
+        if (client == null) return;
 
         client.send(message)
             .whenCompleteAsync(
