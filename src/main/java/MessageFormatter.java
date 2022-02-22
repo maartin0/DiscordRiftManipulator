@@ -50,6 +50,7 @@ public class MessageFormatter {
                 "\n",
                 Stream.of(getReplyContent(message.getReferencedMessage()),
                         replaceMentions(message),
+                        String.join("\n",message.getStickers().stream().map(MessageSticker::getIconUrl).toList()),
                         String.join("\n",message.getAttachments().stream().map(Message.Attachment::getUrl).toList())
                 ).filter((String s) -> !(s.isBlank() || s.isEmpty())).toList());
     }
