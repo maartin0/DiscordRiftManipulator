@@ -48,6 +48,3 @@ If you find any issues feel free to open a new [issue](https://github.com/maarti
 
 ## Discord
 Click [here](https://discord.gg/fRxDrquQjA) to join the discord support server.
-
-## Patreon 
-You can donate [here](https://www.patreon.com/riftmanipulator) to fund the bot hosting & development, 
