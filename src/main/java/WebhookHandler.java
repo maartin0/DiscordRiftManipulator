@@ -63,10 +63,10 @@ public class WebhookHandler {
     void editWebhookMessage(Message newMessage, Message oldMessage) {
         if (!oldMessage.isWebhookMessage()) return;
 
-        JDAWebhookClient client = getChannelWebhook(oldMessage.getTextChannel());
+        JDAWebhookClient client = getChannelWebhook(oldMessage.getChannel().asTextChannel());
         if (Objects.isNull(client)) return;
 
-        WebhookMessage webhookMessage = getWebhookMessage(newMessage, newMessage.getTextChannel());
+        WebhookMessage webhookMessage = getWebhookMessage(newMessage, newMessage.getChannel().asTextChannel());
         client.edit(oldMessage.getIdLong(), webhookMessage);
     }
 

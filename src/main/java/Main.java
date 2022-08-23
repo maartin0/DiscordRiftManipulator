@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 import javax.security.auth.login.LoginException;
@@ -24,7 +24,7 @@ public class Main {
 
     public static List<String> debug_administrators = new ArrayList<>();
 
-    public final static List<Permission> required_permissions = Arrays.asList(Permission.VIEW_CHANNEL, Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MANAGE_CHANNEL, Permission.MANAGE_WEBHOOKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_ATTACH_FILES, Permission.MESSAGE_HISTORY, Permission.MESSAGE_EXT_EMOJI, Permission.USE_SLASH_COMMANDS);
+    public final static List<Permission> required_permissions = Arrays.asList(Permission.VIEW_CHANNEL, Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND, Permission.MANAGE_CHANNEL, Permission.MANAGE_WEBHOOKS, Permission.MESSAGE_MANAGE, Permission.MESSAGE_EMBED_LINKS, Permission.MESSAGE_ATTACH_FILES, Permission.MESSAGE_HISTORY, Permission.MESSAGE_EXT_EMOJI);
 
     public static HashMap<String, List<String>> warned_servers = new HashMap<>();
 
@@ -36,26 +36,26 @@ public class Main {
 
     static void updateCommands() {
         jda.updateCommands().addCommands(
-                new CommandData("create", "Creates a new rift with the supplied name and description. (Permission Requirement: Administrator)")
+                Commands.slash("create", "Creates a new rift with the supplied name and description. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "name", "The name of the rift.").setRequired(true))
                         .addOptions(new OptionData(OptionType.STRING, "description", "The description of the rift.").setRequired(true)),
-                new CommandData("leave", "Leaves the rift and removes it from the current channel. (Permission Requirement: Administrator)"),
-                new CommandData("delete-message", "Deletes the supplied message from every channel. (Permission Requirement: Manage Messages)")
+                Commands.slash("leave", "Leaves the rift and removes it from the current channel. (Permission Requirement: Administrator)"),
+                Commands.slash("delete-message", "Deletes the supplied message from every channel. (Permission Requirement: Manage Messages)")
                         .addOptions(new OptionData(OptionType.STRING, "message_id", "The ID of the message to delete.").setRequired(true)),
-                new CommandData("join", "Joins an existing rift with the supplied token. (Permission Requirement: Administrator)")
+                Commands.slash("join", "Joins an existing rift with the supplied token. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "token", "The rift token.").setRequired(true)),
-                new CommandData("global_modify", "Modifies global channel settings. (Permission Requirement: Administrator)")
+                Commands.slash("global_modify", "Modifies global channel settings. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "name", "The name of the rift.").setRequired(true))
                         .addOptions(new OptionData(OptionType.STRING, "description", "The description of the rift.").setRequired(true)),
-                new CommandData("modify", "Modifies local channel settings. (Permission Requirement: Administrator)")
+                Commands.slash("modify", "Modifies local channel settings. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "prefix", "The prefix of the channel.").setRequired(false))
                         .addOptions(new OptionData(OptionType.STRING, "description", "The description of the channel.").setRequired(false))
                         .addOptions(new OptionData(OptionType.STRING, "invite_code", "The guild invite code. (not the URL)").setRequired(false)),
-                new CommandData("set_prefix", "Sets the channel prefix. (Permission Requirement: Administrator)")
+                Commands.slash("set_prefix", "Sets the channel prefix. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "prefix", "The prefix of the channel.").setRequired(true)),
-                new CommandData("set_description", "Sets the channel description. (Permission Requirement: Administrator)")
+                Commands.slash("set_description", "Sets the channel description. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "description", "The description of the channel.").setRequired(true)),
-                new CommandData("set_invite", "Sets the guild invite code. (Permission Requirement: Administrator)")
+                Commands.slash("set_invite", "Sets the guild invite code. (Permission Requirement: Administrator)")
                         .addOptions(new OptionData(OptionType.STRING, "invite_code", "The guild invite code. (not the URL)").setRequired(true))
         ).queue();
     }

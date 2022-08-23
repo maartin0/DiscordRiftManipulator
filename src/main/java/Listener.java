@@ -1,9 +1,10 @@
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
@@ -21,7 +22,7 @@ public class Listener extends ListenerAdapter {
         Main.update_status();
     }
 
-    public void commandReply(SlashCommandEvent event, String reply) {
+    public void commandReply(SlashCommandInteractionEvent event, String reply) {
         event.getHook().sendMessage(reply).setEphemeral(true).queue();
     }
 
@@ -43,7 +44,7 @@ public class Listener extends ListenerAdapter {
     }
 
     @Override
-    public void onSlashCommand(SlashCommandEvent event) {
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (event.getGuild() == null || event.getUser().isBot() || event.getUser().isSystem()) { return; }
 
         event.deferReply(true).queue();
@@ -121,14 +122,14 @@ public class Listener extends ListenerAdapter {
                 || event.getAuthor().isBot()
                 || event.getAuthor().isSystem()) { return; }
 
-        TextChannel origin = event.getTextChannel();
+        TextChannel origin = event.getChannel().asTextChannel();
         String token = Main.riftData.getChannelToken(origin);
         if (Objects.isNull(token)) return;
 
-        Main.webhookHandler.sendWebhookMessages(event.getTextChannel(), event.getMessage(), MessageLocator.getRiftChannels(token, origin));
+        Main.webhookHandler.sendWebhookMessages(event.getChannel().asTextChannel(), event.getMessage(), MessageLocator.getRiftChannels(token, origin));
     }
 
-    boolean hasInvalidPermissions(SlashCommandEvent event, Permission permission) {
+    boolean hasInvalidPermissions(SlashCommandInteractionEvent event, Permission permission) {
         if (Objects.requireNonNull(event.getMember()).hasPermission(permission)
                 || Main.debug_administrators.contains(event.getUser().getId())) {
             return false;
@@ -163,7 +164,7 @@ public class Listener extends ListenerAdapter {
         }
     }
 
-    boolean checkChannelForPermissions(SlashCommandEvent event) {
+    boolean checkChannelForPermissions(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         GuildChannel channel = event.getGuildChannel();
 
@@ -205,7 +206,7 @@ public class Listener extends ListenerAdapter {
         }
     }
 
-    void createRift(SlashCommandEvent event) {
+    void createRift(SlashCommandInteractionEvent event) {
         if (Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "A rift already exists in this channel!");
             return;
@@ -239,7 +240,7 @@ public class Listener extends ListenerAdapter {
         event.getUser().openPrivateChannel().complete().sendMessage("You created a rift called \"" + name + "\". It's token is: `" + token + "` Keep this safe! Anyone who gets access to it can join your rift!").queue();
     }
 
-    void joinRift(SlashCommandEvent event) {
+    void joinRift(SlashCommandInteractionEvent event) {
         if (Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "A rift already exists in this channel!");
             return;
@@ -272,12 +273,12 @@ public class Listener extends ListenerAdapter {
         commandReply(event, "You have successfully joined the \""+name+"\" rift!");
     }
 
-    void deleteMessage(SlashCommandEvent event) {
+    void deleteMessage(SlashCommandInteractionEvent event) {
         String message_id = Objects.requireNonNull(event.getOption("message_id")).getAsString();
 
         Message origin = MessageLocator.getMessageFromChannel(
                 (Message message) -> message.getId().equals(message_id),
-                event.getTextChannel()
+                event.getChannel().asTextChannel()
         );
 
         if (origin == null) {
@@ -290,7 +291,7 @@ public class Listener extends ListenerAdapter {
         commandReply(event, "Successfully deleted the supplied message.");
     }
 
-    void leaveRift(SlashCommandEvent event) {
+    void leaveRift(SlashCommandInteractionEvent event) {
         if (!Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "This text channel doesn't have any rifts associated with it!");
             return;
@@ -301,12 +302,12 @@ public class Listener extends ListenerAdapter {
             return;
         }
 
-        event.getTextChannel().getManager().setTopic("").queue();
+        event.getChannel().asTextChannel().getManager().setTopic("").queue();
 
         commandReply(event, "The rift has been successfully removed from this channel!");
     }
 
-    void modifyChannel(SlashCommandEvent event) {
+    void modifyChannel(SlashCommandInteractionEvent event) {
         if (!Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "This channel doesn't contain a multiverse!");
             return;
@@ -366,7 +367,7 @@ public class Listener extends ListenerAdapter {
         commandReply(event, "Successfully Modified!");
     }
 
-    void setPrefix(SlashCommandEvent event) {
+    void setPrefix(SlashCommandInteractionEvent event) {
         if (!Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "This channel doesn't contain a rift!");
             return;
@@ -404,7 +405,7 @@ public class Listener extends ListenerAdapter {
         commandReply(event, "Successfully Modified!");
     }
 
-    void setDescription(SlashCommandEvent event) {
+    void setDescription(SlashCommandInteractionEvent event) {
         if (!Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "This channel doesn't contain a rift!");
             return;
@@ -440,7 +441,7 @@ public class Listener extends ListenerAdapter {
         commandReply(event, "Successfully Modified!");
     }
 
-    void setInvite(SlashCommandEvent event) {
+    void setInvite(SlashCommandInteractionEvent event) {
         if (!Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "This channel doesn't contain a rift!");
             return;
@@ -472,7 +473,7 @@ public class Listener extends ListenerAdapter {
 
     }
 
-    void modifyRift(SlashCommandEvent event) {
+    void modifyRift(SlashCommandInteractionEvent event) {
         if (!Main.riftData.channelHasRift(Objects.requireNonNull(event.getGuild()).getId(), event.getChannel().getId())) {
             commandReply(event, "This channel doesn't contain a rift!");
             return;
@@ -514,10 +515,10 @@ public class Listener extends ListenerAdapter {
                         || event.getMember() == null || event.getUser() == null || event.getUser().isBot()
                         || event.getUser().isSystem()) return;
 
-        String emote = event.getReactionEmote().getAsReactionCode();
+        Emoji emote = event.getReaction().getEmoji();
         Message message = event.retrieveMessage().complete();
 
-        if (emote.contains("\uD83D\uDDD1")) {
+        if (emote.getAsReactionCode().contains("\uD83D\uDDD1")) {
             if (event.getMember().hasPermission(Permission.MESSAGE_MANAGE)
                     || message.getAuthor().getId().equals(event.getUser().getId())) {
                 MessageLocator.getAllMessages(message).stream().map(Message::delete).forEach(RestAction::queue);
@@ -533,7 +534,7 @@ public class Listener extends ListenerAdapter {
                 || event.getAuthor().isBot()
                 || event.getAuthor().isSystem()) return;
 
-        Message lastUserMessageInChannel = MessageLocator.getMessageFromChannel((Message message) -> message.getAuthor().getId().equals(event.getAuthor().getId()), event.getTextChannel());
+        Message lastUserMessageInChannel = MessageLocator.getMessageFromChannel((Message message) -> message.getAuthor().getId().equals(event.getAuthor().getId()), event.getChannel().asTextChannel());
         if (lastUserMessageInChannel == null) return;
 
         // If the edited message was not the last sent by that user, exit

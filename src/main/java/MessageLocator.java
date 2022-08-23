@@ -47,7 +47,7 @@ public class MessageLocator {
     }
 
     public static List<Message> getAllMessages(Message origin, boolean ignoreContent) {
-        TextChannel originChannel = origin.getTextChannel();
+        TextChannel originChannel = origin.getChannel().asTextChannel();
         String token = Main.riftData.getChannelToken(originChannel);
         if (Objects.isNull(token) || !origin.isFromGuild() || origin.getAuthor().isSystem()) return Collections.emptyList();
 

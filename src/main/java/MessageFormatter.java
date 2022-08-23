@@ -1,4 +1,5 @@
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -9,7 +10,7 @@ public class MessageFormatter {
 
     static String replaceMentions(Message message) {
         Map<String, String> toReplace = new HashMap<>();
-        message.getMentionedUsers().forEach((User user) -> {
+        message.getMentions().getUsers().forEach((User user) -> {
             String replacement = getNameID(user);
             toReplace.put(String.format("<@%s>", user.getId()), replacement);
             toReplace.put(String.format("<@!%s>", user.getId()), replacement);
@@ -50,7 +51,7 @@ public class MessageFormatter {
                 "\n",
                 Stream.of(getReplyContent(message.getReferencedMessage()),
                         replaceMentions(message),
-                        String.join("\n",message.getStickers().stream().map(MessageSticker::getIconUrl).toList()),
+                        String.join("\n",message.getStickers().stream().map(StickerItem::getIconUrl).toList()),
                         String.join("\n",message.getAttachments().stream().map(Message.Attachment::getUrl).toList())
                 ).filter((String s) -> !(s.isBlank() || s.isEmpty())).toList());
     }
