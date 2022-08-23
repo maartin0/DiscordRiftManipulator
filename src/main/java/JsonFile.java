@@ -1,3 +1,4 @@
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -5,24 +6,28 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
-class Object {
+class FileObject {
     public JsonObject data;
-    public Object(JsonObject data) {
+    public FileObject(JsonObject data) {
         this.data = data;
     }
-    public Object get(String key) {
-        return new Object(data.get(key).getAsJsonObject());
+    public FileObject get(String key) {
+        return new FileObject(data.get(key).getAsJsonObject());
     }
     public String getString(String key) {
         return data.get(key).getAsString();
     }
+    public Set<String> keys() {
+        return data.keySet();
+    }
 }
 
-public class JsonFile extends Object {
+public class JsonFile extends FileObject {
     public final Path path;
     public final String pathName;
-    public JsonFile(String path) throws IOException {
+    public JsonFile(String path) {
         super(new JsonObject());
         this.pathName = path;
         this.path = Path.of(this.pathName);
