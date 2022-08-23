@@ -6,14 +6,26 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class JsonFile {
+class Object {
+    public JsonObject data;
+    public Object(JsonObject data) {
+        this.data = data;
+    }
+    public Object get(String key) {
+        return new Object(data.get(key).getAsJsonObject());
+    }
+    public String getString(String key) {
+        return data.get(key).getAsString();
+    }
+}
+
+public class JsonFile extends Object {
     public final Path path;
     public final String pathName;
-    public JsonObject data;
     public JsonFile(String path) throws IOException {
+        super(new JsonObject());
         this.pathName = path;
         this.path = Path.of(this.pathName);
-        this.data = new JsonObject();
     }
     public void forceLoad() {
         try {
