@@ -1,3 +1,7 @@
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
+
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
@@ -6,13 +10,14 @@ public class Main {
         AppConfig.load();
 
         try {
-            Bot.load(AppConfig.token);
+            Bot.load(AppConfig.token, new ListenerAdapter() {
+                @Override
+                public void onReady(@NotNull ReadyEvent event) {
+                    Rift.loadAll();
+                }
+            });
         } catch (LoginException e) {
             System.out.println("Unable to load bot, is the token correct?");
         }
-
-        Rift.loadAll();
-
-        System.out.println(Rift.rifts);
     }
 }
