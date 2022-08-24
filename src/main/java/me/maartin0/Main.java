@@ -1,5 +1,8 @@
+package me.maartin0;
+
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -7,8 +10,8 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import org.jetbrains.annotations.NotNull;
-import util.AppConfig;
-import util.Bot;
+import me.maartin0.util.AppConfig;
+import me.maartin0.util.Bot;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -77,6 +80,17 @@ public class Main {
                         }
                     }
                     System.out.println("Ready!");
+                }
+                @Override
+                public void onShutdown(@NotNull ShutdownEvent event) {
+                    System.out.println("Saving data...");
+                    try {
+                        Rift.saveAll();
+                    } catch (IOException e) {
+                        System.out.println("An error occurred while trying to save rift data");
+                        e.printStackTrace();
+                    }
+                    System.out.println("Saving finished");
                 }
             }, new Forwarder.Listener());
         } catch (LoginException e) {

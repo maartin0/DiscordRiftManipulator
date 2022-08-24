@@ -1,10 +1,12 @@
+package me.maartin0;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.MissingAccessException;
-import util.Bot;
-import util.JsonFile;
+import me.maartin0.util.Bot;
+import me.maartin0.util.JsonFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,11 +65,11 @@ public class Rift {
                     .orElseGet(() -> channel.createWebhook("Rift Handler").complete());
         }
     }
-    String token;
-    String name;
-    String description;
-    String primaryGuildId;
-    Collection<RiftChannel> channels;
+    public String token;
+    public String name;
+    public String description;
+    public String primaryGuildId;
+    public Collection<RiftChannel> channels;
     public Rift(String token, String name, String description, String primaryGuildId, Collection<RiftChannel> channels) {
         this.token = token;
         this.name = name;

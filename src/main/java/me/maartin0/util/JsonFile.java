@@ -1,4 +1,4 @@
-package util;
+package me.maartin0.util;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;

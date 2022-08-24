@@ -1,4 +1,4 @@
-package util;
+package me.maartin0.util;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
