@@ -23,6 +23,13 @@ public class Rift {
             this.prefix = prefix;
             this.description = description;
         }
+        @Override
+        public String toString() {
+            return "{\nguild: " + guild + ",\n"
+            + "managerId: " + managerId + ",\n"
+            + "prefix: " + prefix + ",\n"
+            + "description: " + description + "\n}";
+        }
     }
     public static class RiftChannel {
         public RiftGuild guild;
@@ -30,6 +37,11 @@ public class Rift {
         public RiftChannel(RiftGuild guild, TextChannel channel) {
             this.guild = guild;
             this.channel = channel;
+        }
+        @Override
+        public String toString() {
+            return "{\nguild: " + guild + ",\n"
+            + "channel: " + channel + "\n}";
         }
     }
     String token;
@@ -50,6 +62,14 @@ public class Rift {
             map.put(channel.channel.getId(), this);
             lookup.put(channel.guild.guild.getId(), map);
         });
+    }
+    @Override
+    public String toString() {
+        return "{\ntoken: " + this.token + ",\n"
+        + "name: " + this.name + ",\n"
+        + "description: " + this.description + ",\n"
+        + "primaryGuildId: " + this.primaryGuildId + ",\n"
+        + "channels: " + channels + "\n}";
     }
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
