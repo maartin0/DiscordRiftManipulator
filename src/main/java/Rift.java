@@ -2,14 +2,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.exceptions.MissingAccessException;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Rift {
@@ -31,6 +32,16 @@ public class Rift {
             + "prefix: " + prefix + ",\n"
             + "description: " + description + "\n}";
         }
+        public enum WarnReason {
+            WEBHOOK,
+            SEND_MESSAGE,
+            EDIT_MESSAGE,
+            DELETE_MESSAGE
+        }
+        public void warn(WarnReason reason) {
+            // TODO: Implement
+            System.out.println("Warning generated (method not implemented): " + reason);
+        }
     }
     public static class RiftChannel {
         public RiftGuild guild;
@@ -43,6 +54,13 @@ public class Rift {
         public String toString() {
             return "{\nguild: " + guild + ",\n"
             + "channel: " + channel + "\n}";
+        }
+        public Webhook getWebhook() throws MissingAccessException {
+            return channel.retrieveWebhooks()
+                    .complete()
+                    .stream()
+                    .findFirst()
+                    .orElseGet(() -> channel.createWebhook("Rift Handler").complete());
         }
     }
     String token;
@@ -72,14 +90,16 @@ public class Rift {
         + "primaryGuildId: " + this.primaryGuildId + ",\n"
         + "channels: " + channels + "\n}";
     }
+    public Optional<RiftChannel> getRiftChannel(GuildMessageChannel channel) {
+        return channels.stream().filter((RiftChannel riftChannel) -> riftChannel.channel.getIdLong() == channel.getIdLong()).findFirst();
+    }
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
     static JsonFile tokenData = new JsonFile("data/token_data.json");
-    @Nullable
-    public static Rift lookupFromChannel(TextChannel channel) {
+    public static Optional<Rift> lookupFromChannel(GuildMessageChannel channel) {
         Map<String, Rift> serverObject = lookup.get(channel.getGuild().getId());
-        if (serverObject == null) return null;
-        return serverObject.get(channel.getId());
+        if (serverObject == null) return Optional.empty();
+        return Optional.ofNullable(serverObject.get(channel.getId()));
     }
     public static void loadAll() {
         tokenData.forceLoad();
