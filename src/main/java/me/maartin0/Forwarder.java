@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+// TODO: Forward reactions
 public class Forwarder {
     public static class Listener extends ListenerAdapter {
         @Override
@@ -102,6 +103,9 @@ public class Forwarder {
         // Content
         contentBuilder.append(message.getContentRaw())
                 .append(System.lineSeparator());
+
+        // Non-image attachments
+        // TODO: Get non-image attachment urls
         return contentBuilder.toString();
     }
     String getWebhookMessageContent() {
@@ -116,8 +120,14 @@ public class Forwarder {
     }
     List<InputStream> getWebhookMessageAttachments() {
         List<FileProxy> result = new ArrayList<>();
-        origin.getStickers().stream().map(StickerItem::getIcon).forEach(result::add);
-        origin.getAttachments().stream().map(Message.Attachment::getProxy).forEach(result::add);
+        origin.getStickers()
+                .stream()
+                .map(StickerItem::getIcon)
+                .forEach(result::add);
+        origin.getAttachments()
+                .stream()
+                .map(Message.Attachment::getProxy)
+                .forEach(result::add); // TODO: Filter image attachments
         return result.stream()
                 .map(Forwarder::getInputStream)
                 .filter(Optional::isPresent)

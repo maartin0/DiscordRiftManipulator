@@ -16,6 +16,7 @@ public class AppConfig {
     public static String prefixRegex;
     public static List<String> debugAdministrators;
     public static boolean updateCommands;
+    // TODO: Add auto-save property
     public static List<User> getDebugAdministrators() {
         return debugAdministrators.stream()
                 .map(Bot.getJDA()::retrieveUserById)

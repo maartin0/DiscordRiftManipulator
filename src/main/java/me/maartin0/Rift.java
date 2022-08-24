@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Rift {
     public static class RiftGuild {
@@ -43,6 +45,13 @@ public class Rift {
         public void warn(WarnReason reason) {
             // TODO: Implement
             System.out.println("Warning generated (method not implemented): " + reason);
+        }
+        public static String generatePrefix(String guildName) {
+            return guildName.chars()
+                    .mapToObj(c -> (char) c)
+                    .filter(Character::isUpperCase)
+                    .map(Object::toString)
+                    .collect(Collectors.joining());
         }
     }
     public static class RiftChannel {

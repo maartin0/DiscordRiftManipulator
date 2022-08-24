@@ -48,16 +48,16 @@ public class Main {
                                                 .addOption(OptionType.STRING, "code", "guild invite code", true))
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
-                .command(Commands.slash("purge", "Purge x messages globally")
+                .command(Commands.slash("purge", "Purge x messages globally") // TODO: purge function
                         .addOption(OptionType.NUMBER, "number", "number of messages to purge", true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
-                .command(Commands.message("Delete message")
+                .command(Commands.message("Delete message") // TODO: delete function
                         .setGuildOnly(true))
-                .command(Commands.message("Pin message")
+                .command(Commands.message("Pin message") // TODO: pin function
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
-                .command(Commands.user("Toggle mute")
+                .command(Commands.user("Toggle mute") // TODO: mute function
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS))
                         .setGuildOnly(true))
                 .updateCommands();
@@ -73,7 +73,7 @@ public class Main {
                 new ManagementCommandListener(),
                 new ModerationCommandListener(),
                 new UtilCommandListener(),
-                new ListenerAdapter() {
+                new ListenerAdapter() { // TODO: Move into separate general listener
                     @Override
                     public void onReady(@NotNull ReadyEvent event) {
                         System.out.println("Loading rifts from storage...");
@@ -106,5 +106,6 @@ public class Main {
         } catch (LoginException e) {
             System.out.println("Unable to load bot, is the token correct?");
         }
+        // TODO: Schedule save all rifts every 5 mins (configurable)
     }
 }
