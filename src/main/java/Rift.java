@@ -127,15 +127,15 @@ public class Rift {
                     serverObject.addProperty("prefix", channel.guild.prefix);
                     serverObject.addProperty("description", channel.guild.description);
                     channelsArray = new JsonArray();
-                    channelsArray.add(channel.channel.getId());
-                    serverObject.add("channels", channelsArray);
-                    serversObject.add(channel.guild.guild.getId(), serverObject);
                 } else {
                     serverObject = storedElement.getAsJsonObject();
                     channelsArray = serverObject.get("channels").getAsJsonArray();
-                    channelsArray.add(channel.channel.getId());
                 }
+                channelsArray.add(channel.channel.getId());
+                serverObject.add("channels", channelsArray);
+                serversObject.add(channel.guild.guild.getId(), serverObject);
             });
+            riftObject.add("channels", serversObject);
             result.add(rift.token, riftObject);
         });
         return result;
