@@ -54,13 +54,13 @@ public class Rift {
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
     static JsonFile tokenData = new JsonFile("data/token_data.json");
-    public static void loadAll(JDA jda) {
+    public static void loadAll() {
         tokenData.forceLoad();
         tokenData.data.entrySet().forEach((Map.Entry<String, JsonElement> entry) -> {
             JsonObject object = entry.getValue().getAsJsonObject();
             Collection<RiftChannel> channels = new ArrayList<>();
             object.get("channels").getAsJsonObject().entrySet().forEach((Map.Entry<String, JsonElement> serverEntry) -> {
-                Guild guild = jda.getGuildById(serverEntry.getKey());
+                Guild guild = Bot.getJDA().getGuildById(serverEntry.getKey());
                 if (guild == null) return;
                 JsonObject server = serverEntry.getValue().getAsJsonObject();
                 RiftGuild riftGuild = new RiftGuild(
