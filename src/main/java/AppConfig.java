@@ -1,4 +1,5 @@
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
@@ -6,6 +7,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class AppConfig {
     static JsonFile config;
@@ -35,5 +37,12 @@ public class AppConfig {
             generate();
             config.save();
         }
+        token = config.getString("token");
+        prefixRegex = config.getString("prefix_regex");
+        debugAdministrators = Stream.of(config.get("debug_administrators").data.getAsJsonArray())
+                .map(JsonElement::getAsJsonObject)
+                .map(JsonObject::getAsString)
+                .toList();
+        updateCommands = config.get("update_commands").data.getAsBoolean();
     }
 }
