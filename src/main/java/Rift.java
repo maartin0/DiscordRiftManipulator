@@ -1,9 +1,11 @@
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -52,10 +54,8 @@ public class Rift {
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
     static JsonFile tokenData = new JsonFile("data/token_data.json");
-    static JsonFile serverData = new JsonFile("data/server_data.json");
     public static void load(JDA jda) {
         tokenData.forceLoad();
-        serverData.forceLoad();
         tokenData.data.entrySet().forEach((Map.Entry<String, JsonElement> entry) -> {
             JsonObject object = entry.getValue().getAsJsonObject();
             Collection<RiftChannel> channels = new ArrayList<>();
@@ -96,10 +96,32 @@ public class Rift {
             riftObject.addProperty("name", rift.name);
             riftObject.addProperty("description", rift.description);
             riftObject.addProperty("creator_guild", rift.primaryGuildId);
-            JsonObject channelsObject = new JsonObject();
-            // TODO: Serialize guilds individually
+            JsonObject serversObject = new JsonObject();
+            rift.channels.forEach((RiftChannel channel) -> {
+                JsonElement storedElement = serversObject.get(channel.guild.guild.getId());
+                JsonObject serverObject;
+                JsonArray channelsArray;
+                if (storedElement == null) {
+                    serverObject = new JsonObject();
+                    serverObject.addProperty("manager_id", channel.guild.managerId);
+                    serverObject.addProperty("prefix", channel.guild.prefix);
+                    serverObject.addProperty("description", channel.guild.description);
+                    channelsArray = new JsonArray();
+                    channelsArray.add(channel.channel.getId());
+                    serverObject.add("channels", channelsArray);
+                    serversObject.add(channel.guild.guild.getId(), serverObject);
+                } else {
+                    serverObject = storedElement.getAsJsonObject();
+                    channelsArray = serverObject.get("channels").getAsJsonArray();
+                    channelsArray.add(channel.channel.getId());
+                }
+            });
             result.add(rift.token, riftObject);
         });
         return result;
+    }
+    public static void save() throws IOException {
+        tokenData.data = Rift.serialize();
+        tokenData.save();
     }
 }
