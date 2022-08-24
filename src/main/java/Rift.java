@@ -54,7 +54,7 @@ public class Rift {
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
     static JsonFile tokenData = new JsonFile("data/token_data.json");
-    public static void load(JDA jda) {
+    public static void loadAll(JDA jda) {
         tokenData.forceLoad();
         tokenData.data.entrySet().forEach((Map.Entry<String, JsonElement> entry) -> {
             JsonObject object = entry.getValue().getAsJsonObject();
@@ -120,7 +120,7 @@ public class Rift {
         });
         return result;
     }
-    public static void save() throws IOException {
+    public static void saveAll() throws IOException {
         tokenData.data = Rift.serialize();
         tokenData.save();
     }
