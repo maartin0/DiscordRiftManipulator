@@ -56,7 +56,7 @@ public class Forwarder {
         builder.setAvatarUrl(origin.getAuthor().getAvatarUrl());
         builder.setUsername(username);
         builder.setContent(content);
-        attachments.forEach((InputStream stream) -> builder.addFile("", stream));
+        attachments.forEach((InputStream stream) -> builder.addFile("attachment.png", stream));
         try (WebhookClient client = WebhookClientBuilder.fromJDA(channel.getWebhook()).build()) {
             client.send(builder.build())
                 .whenCompleteAsync((errorMessage, exception) -> {
@@ -68,7 +68,7 @@ public class Forwarder {
         }
     }
     public static String getWebhookUsername(String prefix, String username) {
-        return prefix + ": " + username;
+        return "%s: %s".formatted(prefix, username);
     }
     String getWebhookUsername() {
         return getWebhookUsername(originRiftChannel.guild.prefix, origin.getAuthor().getName());
@@ -88,8 +88,8 @@ public class Forwarder {
                     referencedMessage.getContentRaw()
                         .lines()
                         .filter((String line) -> !line.startsWith("> "))
-                        .map((String line) -> String.format("> %s%s", line, System.lineSeparator()))
-                        .collect(Collectors.joining(","))
+                        .map((String line) -> String.format("> %s", line))
+                        .collect(Collectors.joining(System.lineSeparator()))
             );
             contentBuilder.append(System.lineSeparator())
                     .append("> ")
@@ -100,13 +100,6 @@ public class Forwarder {
         // Content
         contentBuilder.append(message.getContentRaw())
                 .append(System.lineSeparator());
-        // Attachments
-        contentBuilder.append(
-                message.getAttachments()
-                        .stream()
-                        .map(Message.Attachment::getUrl)
-                        .collect(Collectors.joining(System.lineSeparator()))
-        );
         return contentBuilder.toString();
     }
     String getWebhookMessageContent() {
