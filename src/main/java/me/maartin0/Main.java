@@ -1,6 +1,8 @@
 package me.maartin0;
 
-import me.maartin0.interactions.ManagementCommandsListener;
+import me.maartin0.interactions.ManagementCommandListener;
+import me.maartin0.interactions.ModerationCommandListener;
+import me.maartin0.interactions.UtilCommandListener;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
@@ -65,35 +67,42 @@ public class Main {
         AppConfig.load();
         try {
             System.out.println("Initializing bot...");
-            Bot.load(AppConfig.token, new ListenerAdapter() {
-                @Override
-                public void onReady(@NotNull ReadyEvent event) {
-                    System.out.println("Loading rifts from storage...");
-                    Rift.loadAll();
-                    if (AppConfig.updateCommands) {
-                        System.out.println("Updating global commands...");
-                        updateCommands();
-                        AppConfig.updateCommands = false;
-                        try {
-                            AppConfig.save();
-                        } catch (IOException e) {
-                            System.out.println("Warning: Unable to save configuration with updated commands");
+            Bot.load(
+                AppConfig.token,
+                new Forwarder.Listener(),
+                new ManagementCommandListener(),
+                new ModerationCommandListener(),
+                new UtilCommandListener(),
+                new ListenerAdapter() {
+                    @Override
+                    public void onReady(@NotNull ReadyEvent event) {
+                        System.out.println("Loading rifts from storage...");
+                        Rift.loadAll();
+                        if (AppConfig.updateCommands) {
+                            System.out.println("Updating global commands...");
+                            updateCommands();
+                            AppConfig.updateCommands = false;
+                            try {
+                                AppConfig.save();
+                            } catch (IOException e) {
+                                System.out.println("Warning: Unable to save configuration with updated commands");
+                            }
                         }
+                        System.out.println("Ready!");
                     }
-                    System.out.println("Ready!");
-                }
-                @Override
-                public void onShutdown(@NotNull ShutdownEvent event) {
-                    System.out.println("Saving data...");
-                    try {
-                        Rift.saveAll();
-                    } catch (IOException e) {
-                        System.out.println("An error occurred while trying to save rift data");
-                        e.printStackTrace();
+                    @Override
+                    public void onShutdown(@NotNull ShutdownEvent event) {
+                        System.out.println("Saving data...");
+                        try {
+                            Rift.saveAll();
+                        } catch (IOException e) {
+                            System.out.println("An error occurred while trying to save rift data");
+                            e.printStackTrace();
+                        }
+                        System.out.println("Saving finished");
                     }
-                    System.out.println("Saving finished");
                 }
-            }, new Forwarder.Listener(), new ManagementCommandsListener());
+            );
         } catch (LoginException e) {
             System.out.println("Unable to load bot, is the token correct?");
         }
