@@ -83,6 +83,7 @@ public class Rift {
             map.put(channel.channel.getId(), this);
             lookup.put(channel.guild.guild.getId(), map);
         });
+        rifts.add(this);
     }
     @Override
     public String toString() {
@@ -129,13 +130,13 @@ public class Rift {
                     );
                 });
             });
-            rifts.add(new Rift(
+            new Rift(
                     entry.getKey(),
                     object.get("name").getAsString(),
                     object.get("description").getAsString(),
                     object.get("creator_guild").getAsString(),
                     channels
-            ));
+            );
         });
     }
     private static JsonObject serialize() {
