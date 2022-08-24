@@ -12,5 +12,7 @@ public class Main {
         }
 
         Rift.loadAll();
+
+        System.out.println(Rift.rifts);
     }
 }
