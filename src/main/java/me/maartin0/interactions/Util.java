@@ -1,4 +1,4 @@
-package me.maartin0;
+package me.maartin0.interactions;
 
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
