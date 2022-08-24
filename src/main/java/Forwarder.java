@@ -6,8 +6,11 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.entities.sticker.StickerItem;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.MissingAccessException;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.FileProxy;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.util.*;
@@ -15,6 +18,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class Forwarder {
+    public static class Listener extends ListenerAdapter {
+        @Override
+        public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+            if (event.getAuthor().isBot() || event.getAuthor().isSystem()) return;
+            new Forwarder(event.getMessage());
+        }
+    }
+
     Rift rift;
     Rift.RiftChannel originRiftChannel;
     Message origin;
@@ -37,7 +48,7 @@ public class Forwarder {
     }
     void sendAll() {
         rift.channels.stream()
-                .filter((Rift.RiftChannel channel) -> channel.channel.getIdLong() != origin.getChannel().getIdLong() )
+                .filter((Rift.RiftChannel channel) -> channel.channel.getIdLong() != origin.getChannel().getIdLong())
                 .forEach((Rift.RiftChannel channel) -> send(channel, getWebhookUsername(), getWebhookMessageContent(), getWebhookMessageAttachments()));
     }
     void send(Rift.RiftChannel channel, String username, String content, Collection<InputStream> attachments) {
@@ -46,7 +57,7 @@ public class Forwarder {
         builder.setUsername(username);
         builder.setContent(content);
         attachments.forEach((InputStream stream) -> builder.addFile("", stream));
-        try (WebhookClient client = WebhookClientBuilder.fromJDA(originRiftChannel.getWebhook()).build()) {
+        try (WebhookClient client = WebhookClientBuilder.fromJDA(channel.getWebhook()).build()) {
             client.send(builder.build())
                 .whenCompleteAsync((errorMessage, exception) -> {
                     if (exception == null) return;

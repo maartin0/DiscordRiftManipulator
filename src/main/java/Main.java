@@ -15,7 +15,7 @@ public class Main {
                 public void onReady(@NotNull ReadyEvent event) {
                     Rift.loadAll();
                 }
-            });
+            }, new Forwarder.Listener());
         } catch (LoginException e) {
             System.out.println("Unable to load bot, is the token correct?");
         }
