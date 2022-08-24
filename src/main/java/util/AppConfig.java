@@ -17,9 +17,9 @@ public class AppConfig {
     public static String prefixRegex;
     public static List<String> debugAdministrators;
     public static boolean updateCommands;
-    public static List<User> getDebugAdministrators(JDA jda) {
+    public static List<User> getDebugAdministrators() {
         return debugAdministrators.stream()
-                .map(jda::retrieveUserById)
+                .map(Bot.getJDA()::retrieveUserById)
                 .map(RestAction::complete)
                 .toList();
     }
@@ -45,5 +45,9 @@ public class AppConfig {
                 .map(JsonElement::getAsString)
                 .toList();
         updateCommands = config.data.get("update_commands").getAsBoolean();
+    }
+    public static void save() throws IOException {
+        config.data.addProperty("update_commands", updateCommands);
+        config.save(true);
     }
 }
