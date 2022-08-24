@@ -1,5 +1,6 @@
 package me.maartin0;
 
+import me.maartin0.interactions.ManagementCommandsListener;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
@@ -92,7 +93,7 @@ public class Main {
                     }
                     System.out.println("Saving finished");
                 }
-            }, new Forwarder.Listener());
+            }, new Forwarder.Listener(), new ManagementCommandsListener());
         } catch (LoginException e) {
             System.out.println("Unable to load bot, is the token correct?");
         }
