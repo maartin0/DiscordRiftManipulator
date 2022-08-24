@@ -1,6 +1,8 @@
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
+import util.AppConfig;
+import util.Bot;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
