@@ -1,3 +1,4 @@
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -13,21 +14,19 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 
 public class Main {
-    public static DefaultMemberPermissions moderatorPermission = DefaultMemberPermissions.enabledFor(8192);
-    public static DefaultMemberPermissions administratorPermission = DefaultMemberPermissions.enabledFor(8);
     static void updateCommands() {
         Bot.bot
                 .command(Commands.slash("create", "Create a new rift")
                         .addOption(OptionType.STRING, "name", "rift name", true)
                         .addOption(OptionType.STRING, "description", "rift description", true)
-                        .setDefaultPermissions(administratorPermission)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
                 .command(Commands.slash("leave", "Remove the rift from the current channel")
-                        .setDefaultPermissions(administratorPermission)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
                 .command(Commands.slash("join", "Join an existing rift")
                         .addOption(OptionType.STRING, "token", "rift token", true)
-                        .setDefaultPermissions(administratorPermission)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
                 .command(Commands.slash("modify", "Modify rift settings")
                         .addSubcommandGroups(new SubcommandGroupData("global", "Modify global rift settings")
@@ -41,19 +40,19 @@ public class Main {
                                             .addOption(OptionType.STRING, "description", "local channel description", true),
                                         new SubcommandData("invite", "Modify the invite code for the guild (NOT the URL)")
                                                 .addOption(OptionType.STRING, "code", "guild invite code", true))
-                        .setDefaultPermissions(administratorPermission)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
                 .command(Commands.slash("purge", "Purge x messages globally")
                         .addOption(OptionType.NUMBER, "number", "number of messages to purge", true)
-                        .setDefaultPermissions(moderatorPermission)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
                 .command(Commands.message("Delete message")
                         .setGuildOnly(true))
                 .command(Commands.message("Pin message")
-                        .setDefaultPermissions(moderatorPermission)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
                 .command(Commands.user("Toggle mute")
-                        .setDefaultPermissions(moderatorPermission)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS))
                         .setGuildOnly(true))
                 .updateCommands();
     }
