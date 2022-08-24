@@ -39,10 +39,9 @@ public class AppConfig {
         }
         token = config.getString("token");
         prefixRegex = config.getString("prefix_regex");
-        debugAdministrators = Stream.of(config.get("debug_administrators").data.getAsJsonArray())
-                .map(JsonElement::getAsJsonObject)
-                .map(JsonObject::getAsString)
+        debugAdministrators = Stream.of(config.data.getAsJsonArray("debug_administrators"))
+                .map(JsonElement::getAsString)
                 .toList();
-        updateCommands = config.get("update_commands").data.getAsBoolean();
+        updateCommands = config.data.get("update_commands").getAsBoolean();
     }
 }
