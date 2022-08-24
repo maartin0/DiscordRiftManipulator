@@ -1,4 +1,5 @@
-import com.google.gson.JsonElement;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -6,7 +7,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
 
 class FileObject {
     public JsonObject data;
@@ -18,9 +18,6 @@ class FileObject {
     }
     public String getString(String key) {
         return data.get(key).getAsString();
-    }
-    public Set<String> keys() {
-        return data.keySet();
     }
 }
 
@@ -46,7 +43,15 @@ public class JsonFile extends FileObject {
     public void save() throws IOException {
         save(false);
     }
-    public void save(Boolean pretty) throws IOException {
-        Files.writeString(this.path, this.data.toString(), Charset.defaultCharset());
+    public void save(Boolean pretty) throws IOException {;
+        Files.writeString(
+            this.path,
+            (pretty
+                    ? new GsonBuilder().setPrettyPrinting()
+                    : new GsonBuilder()
+            ).create()
+             .toJson(this.data),
+            Charset.defaultCharset()
+        );
     }
 }
