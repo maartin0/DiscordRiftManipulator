@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,6 +75,12 @@ public class Rift {
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
     static JsonFile tokenData = new JsonFile("data/token_data.json");
+    @Nullable
+    public static Rift lookupFromChannel(TextChannel channel) {
+        Map<String, Rift> serverObject = lookup.get(channel.getGuild().getId());
+        if (serverObject == null) return null;
+        return serverObject.get(channel.getId());
+    }
     public static void loadAll() {
         tokenData.forceLoad();
         tokenData.data.entrySet().forEach((Map.Entry<String, JsonElement> entry) -> {
