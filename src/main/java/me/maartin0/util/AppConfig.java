@@ -10,8 +10,8 @@ public class AppConfig {
     public static boolean updateCommands;
     public static boolean autosave;
     public static int autosaveInterval;
-    public static boolean debug;
-    public static boolean quiet;
+    public static boolean debug; // TODO
+    public static boolean quiet; // TODO
     static void generate() {
         config.data = new JsonObject();
         config.data.addProperty("token", "");
