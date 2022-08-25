@@ -3,7 +3,7 @@ package me.maartin0;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
-import net.dv8tion.jda.api.entities.GuildMessageChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -32,13 +32,9 @@ public class Forwarder {
     Rift rift;
     Rift.RiftChannel originRiftChannel;
     Message origin;
-    GuildMessageChannel originMessageChannel;
+    TextChannel originMessageChannel;
     public Forwarder(Message origin) {
-        MessageChannelUnion originMessageChannelUnion = origin.getChannel();
-        if (!(originMessageChannelUnion instanceof GuildMessageChannel)) return;
-        originMessageChannel = (GuildMessageChannel) originMessageChannelUnion;
-
-        Optional<Rift> optionalRift = Rift.lookupFromChannel(originMessageChannel);
+        Optional<Rift> optionalRift = Rift.lookupFromChannel(origin.getChannel().asTextChannel());
         if (optionalRift.isEmpty()) return;
         this.rift = optionalRift.get();
 
