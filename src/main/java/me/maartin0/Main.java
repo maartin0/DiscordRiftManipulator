@@ -50,16 +50,22 @@ public class Main {
                                                 .addOption(OptionType.STRING, "code", "guild invite code", true))
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
-                .command(Commands.slash("purge", "Purge x messages globally") // TODO: purge function
+                .command(Commands.slash("purge", "Purge x messages globally") // TODO
                         .addOption(OptionType.NUMBER, "number", "number of messages to purge", true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
-                .command(Commands.message("Delete message") // TODO: delete function
+                .command(Commands.slash("reload", "Reload items")
+                        .addSubcommandGroups(new SubcommandGroupData("global", "Globally reload items")
+                                .addSubcommands(new SubcommandData("description", "Globally reload descriptions")))
+                        .addSubcommands(new SubcommandData("description", "Reload local description"))
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
-                .command(Commands.message("Pin message") // TODO: pin function
+                .command(Commands.message("Delete message") // TODO
+                        .setGuildOnly(true))
+                .command(Commands.message("Pin message") // TODO
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
-                .command(Commands.user("Toggle mute") // TODO: mute function
+                .command(Commands.user("Toggle mute") // TODO
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS))
                         .setGuildOnly(true))
                 .updateCommands();
@@ -121,6 +127,5 @@ public class Main {
         } catch (LoginException e) {
             System.out.println("Unable to load bot, is the token correct?");
         }
-        // TODO: Schedule save all rifts every 5 mins (configurable)
     }
 }

@@ -44,7 +44,7 @@ public class Rift {
             DELETE_MESSAGE
         }
         public void warn(WarnReason reason) {
-            // TODO: Implement
+            // TODO
             System.out.println("Warning generated (method not implemented): " + reason);
         }
         public static String generatePrefix(String guildName) {
