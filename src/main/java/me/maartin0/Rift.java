@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.exceptions.MissingAccessException;
 import me.maartin0.util.Bot;
 import me.maartin0.util.JsonFile;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -102,7 +103,7 @@ public class Rift {
         + "primaryGuildId: " + this.primaryGuildId + ",\n"
         + "channels: " + channels + "\n}";
     }
-    public Optional<RiftChannel> getRiftChannel(GuildMessageChannel channel) {
+    public Optional<RiftChannel> getRiftChannel(TextChannel channel) {
         return channels.stream().filter((RiftChannel riftChannel) -> riftChannel.channel.getIdLong() == channel.getIdLong()).findFirst();
     }
     public void addChannel(TextChannel channel, User manager, String description) {
@@ -118,16 +119,32 @@ public class Rift {
                 )
         );
     }
+    public void removeChannel(TextChannel channel) {
+        this.channels = this.channels.stream().filter((RiftChannel item) -> !item.channel.getId().equals(channel.getId())).toList();
+    }
+    public boolean deleteIfEmpty() {
+        if (channels.size() == 0) {
+            this.delete();
+            return true;
+        }
+        return false;
+    }
+    public void delete() {
+        deleteRift(this);
+    }
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
     static JsonFile tokenData = new JsonFile("data/token_data.json");
-    public static Optional<Rift> lookupFromChannel(GuildMessageChannel channel) {
+    public static Optional<Rift> lookupFromChannel(TextChannel channel) {
         Map<String, Rift> serverObject = lookup.get(channel.getGuild().getId());
         if (serverObject == null) return Optional.empty();
         return Optional.ofNullable(serverObject.get(channel.getId()));
     }
     public static Optional<Rift> fromToken(String token) {
         return rifts.stream().filter((Rift rift) -> rift.token.equals(token)).findFirst();
+    }
+    private static void deleteRift(Rift rift) {
+        rifts = rifts.stream().filter((Rift item) -> !item.token.equals(rift.token)).toList();
     }
     public static void loadAll() {
         tokenData.forceLoad();
@@ -163,6 +180,9 @@ public class Rift {
                     channels
             );
         });
+    }
+    public static long purgeAll() {
+        return rifts.stream().map(Rift::deleteIfEmpty).filter(Boolean::booleanValue).count();
     }
     private static JsonObject serialize() {
         JsonObject result = new JsonObject();

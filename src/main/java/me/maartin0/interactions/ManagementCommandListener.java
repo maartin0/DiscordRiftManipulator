@@ -17,7 +17,7 @@ public class ManagementCommandListener extends ListenerAdapter {
         switch (event.getCommandPath()) {
             case "create" -> {
                 event.deferReply(true).queue();
-                if (Rift.lookupFromChannel(event.getGuildChannel()).isPresent()) {
+                if (Rift.lookupFromChannel(event.getChannel().asTextChannel()).isPresent()) {
                     event.getHook().sendMessage("A rift already exists in this channel! Exiting...").queue();;
                     return;
                 }
@@ -49,7 +49,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 event.getUser().openPrivateChannel().complete().sendMessage(message).queue();
             } case "join" -> {
                 event.deferReply(true).queue();
-                if (Rift.lookupFromChannel(event.getGuildChannel()).isPresent()) {
+                if (Rift.lookupFromChannel(event.getChannel().asTextChannel()).isPresent()) {
                     event.getHook().sendMessage("A rift already exists in this channel! Exiting...").queue();;
                     return;
                 }
@@ -76,7 +76,15 @@ public class ManagementCommandListener extends ListenerAdapter {
                 );
                 event.getHook().sendMessage("Success created joined \"%s\"!".formatted(rift.name)).queue();
             } case "leave" -> {
-                // TODO: Create leave method, check if rift is empty and clear not needed; autoclear on leave with seperate listener from Main
+                event.deferReply(true).queue();
+                Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
+                if (riftOptional.isEmpty()) {
+                    event.getHook().sendMessage("There's no rift here!").queue();
+                    return;
+                }
+                Rift rift = riftOptional.get();
+                rift.removeChannel(event.getChannel().asTextChannel());
+                event.getHook().sendMessage("Success!").queue();
             } case "modify/global/name" -> {
                 // TODO: Simple getRift, save name globally, check if it's the creator guild, no need to save
             } case "modify/global/description" -> {
