@@ -1,6 +1,7 @@
 package me.maartin0.interactions;
 
 import me.maartin0.Rift;
+import me.maartin0.util.AppConfig;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -86,16 +87,109 @@ public class ManagementCommandListener extends ListenerAdapter {
                 rift.removeChannel(event.getChannel().asTextChannel());
                 event.getHook().sendMessage("Success!").queue();
             } case "modify/global/name" -> {
-                // TODO: Simple getRift, save name globally, check if it's the creator guild, no need to save
+                event.deferReply(true).queue();
+                OptionMapping name = event.getOption("name");
+                if (name == null) {
+                    event.getHook().sendMessage("Unable to get provided options").queue();
+                    return;
+                }
+                Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
+                if (riftOptional.isEmpty()) {
+                    event.getHook().sendMessage("There's no rift here!").queue();
+                    return;
+                }
+                Rift rift = riftOptional.get();
+                if (event.getGuild() == null || !event.getGuild().getId().equals(rift.primaryGuildId)) {
+                    event.getHook().sendMessage("You can only do this on the original (primary) guild!").queue();
+                    return;
+                }
+                rift.name = name.getAsString();
+                event.getHook().sendMessage("Success! You may also want to run `/reload global description`;").queue();
             } case "modify/global/description" -> {
-                // TODO: Simple getRift, save description globally, check if it's the creator guild, no need to save
+                event.deferReply(true).queue();
+                OptionMapping description = event.getOption("description");
+                if (description == null) {
+                    event.getHook().sendMessage("Unable to get provided options").queue();
+                    return;
+                }
+                Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
+                if (riftOptional.isEmpty()) {
+                    event.getHook().sendMessage("There's no rift here!").queue();
+                    return;
+                }
+                Rift rift = riftOptional.get();
+                if (event.getGuild() == null || !event.getGuild().getId().equals(rift.primaryGuildId)) {
+                    event.getHook().sendMessage("You can only do this on the original (primary) guild!").queue();
+                    return;
+                }
+                rift.description = description.getAsString();
+                event.getHook().sendMessage("Success! You may also want to run `/reload description`;").queue();
             } case "modify/prefix" -> {
-                // TODO: save prefix in server object, possibly reload rift, suggest reload global descriptions
-                // TODO: reload local global? description command
+                event.deferReply(true).queue();
+                OptionMapping prefix = event.getOption("prefix");
+                if (prefix == null) {
+                    event.getHook().sendMessage("Unable to get provided options").queue();
+                    return;
+                } if (!prefix.getAsString().matches(AppConfig.prefixRegex)) {
+                    event.getHook().sendMessage("Invalid prefix").queue();
+                    return;
+                }
+                Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
+                if (riftOptional.isEmpty()) {
+                    event.getHook().sendMessage("There's no rift here!").queue();
+                    return;
+                }
+                Rift rift = riftOptional.get();
+                Optional<Rift.RiftChannel> optionalRiftChannel = rift.getRiftChannel(event.getChannel().asTextChannel());
+                if (optionalRiftChannel.isEmpty()) {
+                    event.getHook().sendMessage("Unable to update prefix.").queue();
+                    return;
+                }
+                Rift.RiftChannel riftChannel = optionalRiftChannel.get();
+                riftChannel.guild.prefix = prefix.getAsString();
+                event.getHook().sendMessage("Success! You may also want to to run `/reload (global) description`;").queue();
             } case "modify/description" -> {
-                // TODO: save description in server object, suggest reload local description
+                event.deferReply(true).queue();
+                OptionMapping description = event.getOption("description");
+                if (description == null) {
+                    event.getHook().sendMessage("Unable to get provided options").queue();
+                    return;
+                }
+                Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
+                if (riftOptional.isEmpty()) {
+                    event.getHook().sendMessage("There's no rift here!").queue();
+                    return;
+                }
+                Rift rift = riftOptional.get();
+                Optional<Rift.RiftChannel> optionalRiftChannel = rift.getRiftChannel(event.getChannel().asTextChannel());
+                if (optionalRiftChannel.isEmpty()) {
+                    event.getHook().sendMessage("Unable to update description.").queue();
+                    return;
+                }
+                Rift.RiftChannel riftChannel = optionalRiftChannel.get();
+                riftChannel.guild.description = description.getAsString();
+                event.getHook().sendMessage("Success! You may also want to to run `/reload description`;").queue();
             } case "modify/invite" -> {
-                // TODO: save invite in server object, possibly reload rift, suggest reload global descriptions
+                event.deferReply(true).queue();
+                OptionMapping invite = event.getOption("code");
+                if (invite == null) {
+                    event.getHook().sendMessage("Unable to get provided options").queue();
+                    return;
+                }
+                Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
+                if (riftOptional.isEmpty()) {
+                    event.getHook().sendMessage("There's no rift here!").queue();
+                    return;
+                }
+                Rift rift = riftOptional.get();
+                Optional<Rift.RiftChannel> optionalRiftChannel = rift.getRiftChannel(event.getChannel().asTextChannel());
+                if (optionalRiftChannel.isEmpty()) {
+                    event.getHook().sendMessage("Unable to update invite.").queue();
+                    return;
+                }
+                Rift.RiftChannel riftChannel = optionalRiftChannel.get();
+                riftChannel.guild.invite = "https://discord.gg/%s".formatted(invite.getAsString());
+                event.getHook().sendMessage("Success! You may also want to to run `/reload (global) description`;").queue();
             }
         }
     }

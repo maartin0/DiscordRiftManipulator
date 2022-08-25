@@ -24,11 +24,13 @@ public class Rift {
         public String managerId;
         public String prefix;
         public String description;
-        public RiftGuild(Guild guild, String managerId, String prefix, String description) {
+        public String invite;
+        public RiftGuild(Guild guild, String managerId, String prefix, String description, String invite) {
             this.guild = guild;
             this.managerId = managerId;
             this.prefix = prefix;
             this.description = description;
+            this.invite = invite;
         }
         @Override
         public String toString() {
@@ -113,7 +115,8 @@ public class Rift {
                                 channel.getGuild(),
                                 manager.getId(),
                                 Rift.RiftGuild.generatePrefix(channel.getGuild().getName()),
-                                description
+                                description,
+                                ""
                         ),
                         channel
                 )
@@ -159,7 +162,8 @@ public class Rift {
                         guild,
                         server.get("manager_id").getAsString(),
                         server.get("prefix").getAsString(),
-                        server.get("description").getAsString()
+                        server.get("description").getAsString(),
+                        server.get("invite").getAsString()
                 );
                 server.get("channels").getAsJsonArray().forEach((JsonElement jsonElement) -> {
                     TextChannel channel = guild.getTextChannelById(jsonElement.getAsString());
@@ -201,6 +205,7 @@ public class Rift {
                     serverObject.addProperty("manager_id", channel.guild.managerId);
                     serverObject.addProperty("prefix", channel.guild.prefix);
                     serverObject.addProperty("description", channel.guild.description);
+                    serverObject.addProperty("invite", channel.guild.invite);
                     channelsArray = new JsonArray();
                 } else {
                     serverObject = storedElement.getAsJsonObject();
