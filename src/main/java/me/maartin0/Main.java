@@ -54,7 +54,7 @@ public class Main {
                         .addOption(OptionType.NUMBER, "number", "number of messages to purge", true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
-                .command(Commands.slash("reload", "Reload items")
+                .command(Commands.slash("reload", "Reload items") // TODO
                         .addSubcommandGroups(new SubcommandGroupData("global", "Globally reload items")
                                 .addSubcommands(new SubcommandData("description", "Globally reload descriptions")))
                         .addSubcommands(new SubcommandData("description", "Reload local description"))
