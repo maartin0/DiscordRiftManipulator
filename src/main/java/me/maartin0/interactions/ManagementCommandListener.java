@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ManagementCommandListener extends ListenerAdapter {
@@ -16,7 +17,10 @@ public class ManagementCommandListener extends ListenerAdapter {
         switch (event.getCommandPath()) {
             case "create" -> {
                 event.deferReply(true).queue();
-                // TODO: Check if rift already exists in that channel
+                if (Rift.lookupFromChannel(event.getGuildChannel()).isPresent()) {
+                    event.getHook().sendMessage("A rift already exists in this channel! Exiting...").queue();;
+                    return;
+                }
                 OptionMapping name = event.getOption("name");
                 OptionMapping description = event.getOption("description");
                 if (name == null || description == null) {
@@ -35,22 +39,42 @@ public class ManagementCommandListener extends ListenerAdapter {
                     guild.getId(),
                     new ArrayList<>()
                 );
-                rift.channels.add(
-                    new Rift.RiftChannel(
-                        new Rift.RiftGuild(
-                            guild,
-                            event.getUser().getId(),
-                            Rift.RiftGuild.generatePrefix(guild.getName()),
-                            description.getAsString()
-                        ),
-                        event.getChannel().asTextChannel()
-                    )
+                rift.addChannel(
+                        event.getChannel().asTextChannel(),
+                        event.getUser(),
+                        description.getAsString()
                 );
                 String message = "Success created \"%s\"! Your token is: `%s`. Send this to other servers to connect them together!".formatted(rift.name, rift.token);
                 event.getHook().sendMessage(message).queue();
                 event.getUser().openPrivateChannel().complete().sendMessage(message).queue();
             } case "join" -> {
-                // TODO: Create join method using above functionality, put into Rift and use here and above
+                event.deferReply(true).queue();
+                if (Rift.lookupFromChannel(event.getGuildChannel()).isPresent()) {
+                    event.getHook().sendMessage("A rift already exists in this channel! Exiting...").queue();;
+                    return;
+                }
+                OptionMapping token = event.getOption("token");
+                if (token == null) {
+                    event.getHook().sendMessage("Unable to get provided options").queue();
+                    return;
+                }
+                Guild guild = event.getGuild();
+                if (guild == null) {
+                    event.getHook().sendMessage("Wrong type!").queue();
+                    return;
+                }
+                Optional<Rift> riftOptional = Rift.fromToken(token.getAsString());
+                if (riftOptional.isEmpty()) {
+                    event.getHook().sendMessage("Invalid token!").queue();
+                    return;
+                }
+                Rift rift = riftOptional.get();
+                rift.addChannel(
+                        event.getChannel().asTextChannel(),
+                        event.getUser(),
+                        rift.description
+                );
+                event.getHook().sendMessage("Success created joined \"%s\"!".formatted(rift.name)).queue();
             } case "leave" -> {
                 // TODO: Create leave method, check if rift is empty and clear not needed; autoclear on leave with seperate listener from Main
             } case "modify/global/name" -> {

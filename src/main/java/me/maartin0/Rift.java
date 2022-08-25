@@ -105,6 +105,19 @@ public class Rift {
     public Optional<RiftChannel> getRiftChannel(GuildMessageChannel channel) {
         return channels.stream().filter((RiftChannel riftChannel) -> riftChannel.channel.getIdLong() == channel.getIdLong()).findFirst();
     }
+    public void addChannel(TextChannel channel, User manager, String description) {
+        this.channels.add(
+                new Rift.RiftChannel(
+                        new Rift.RiftGuild(
+                                channel.getGuild(),
+                                manager.getId(),
+                                Rift.RiftGuild.generatePrefix(channel.getGuild().getName()),
+                                description
+                        ),
+                        channel
+                )
+        );
+    }
     static Collection<Rift> rifts = new ArrayList<>();
     static Map<String, Map<String, Rift>> lookup = new ConcurrentHashMap<>();
     static JsonFile tokenData = new JsonFile("data/token_data.json");
@@ -112,6 +125,9 @@ public class Rift {
         Map<String, Rift> serverObject = lookup.get(channel.getGuild().getId());
         if (serverObject == null) return Optional.empty();
         return Optional.ofNullable(serverObject.get(channel.getId()));
+    }
+    public static Optional<Rift> fromToken(String token) {
+        return rifts.stream().filter((Rift rift) -> rift.token.equals(token)).findFirst();
     }
     public static void loadAll() {
         tokenData.forceLoad();
