@@ -32,14 +32,13 @@ public class Forwarder {
     Rift rift;
     Rift.RiftChannel originRiftChannel;
     Message origin;
-    TextChannel originMessageChannel;
     public Forwarder(Message origin) {
         Optional<Rift> optionalRift = Rift.lookupFromChannel(origin.getChannel().asTextChannel());
         if (optionalRift.isEmpty()) return;
         this.rift = optionalRift.get();
 
         this.origin = origin;
-        Optional<Rift.RiftChannel> optionalRiftChannel = rift.getRiftChannel(originMessageChannel);
+        Optional<Rift.RiftChannel> optionalRiftChannel = rift.getRiftChannel(origin.getChannel().asTextChannel());
         if (optionalRiftChannel.isEmpty()) return;
         this.originRiftChannel = optionalRiftChannel.get();
 
