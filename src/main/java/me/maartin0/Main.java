@@ -62,6 +62,35 @@ public class Main {
                         .setGuildOnly(true))
                 .updateCommands();
     }
+    static class Listener extends ListenerAdapter {
+        @Override
+        public void onReady(@NotNull ReadyEvent event) {
+            System.out.println("Loading rifts from storage...");
+            Rift.loadAll();
+            if (AppConfig.updateCommands) {
+                System.out.println("Updating global commands...");
+                updateCommands();
+                AppConfig.updateCommands = false;
+                try {
+                    AppConfig.save();
+                } catch (IOException e) {
+                    System.out.println("Warning: Unable to save configuration with updated commands");
+                }
+            }
+            System.out.println("Ready!");
+        }
+        @Override
+        public void onShutdown(@NotNull ShutdownEvent event) {
+            System.out.println("Saving data...");
+            try {
+                Rift.saveAll();
+            } catch (IOException e) {
+                System.out.println("An error occurred while trying to save rift data");
+                e.printStackTrace();
+            }
+            System.out.println("Saving finished");
+        }
+    }
     public static void main(String[] args) throws IOException, InstantiationException {
         System.out.println("Loading config...");
         AppConfig.load();
@@ -73,35 +102,7 @@ public class Main {
                 new ManagementCommandListener(),
                 new ModerationCommandListener(),
                 new UtilCommandListener(),
-                new ListenerAdapter() { // TODO: Move into separate general listener
-                    @Override
-                    public void onReady(@NotNull ReadyEvent event) {
-                        System.out.println("Loading rifts from storage...");
-                        Rift.loadAll();
-                        if (AppConfig.updateCommands) {
-                            System.out.println("Updating global commands...");
-                            updateCommands();
-                            AppConfig.updateCommands = false;
-                            try {
-                                AppConfig.save();
-                            } catch (IOException e) {
-                                System.out.println("Warning: Unable to save configuration with updated commands");
-                            }
-                        }
-                        System.out.println("Ready!");
-                    }
-                    @Override
-                    public void onShutdown(@NotNull ShutdownEvent event) {
-                        System.out.println("Saving data...");
-                        try {
-                            Rift.saveAll();
-                        } catch (IOException e) {
-                            System.out.println("An error occurred while trying to save rift data");
-                            e.printStackTrace();
-                        }
-                        System.out.println("Saving finished");
-                    }
-                }
+                new Listener()
             );
         } catch (LoginException e) {
             System.out.println("Unable to load bot, is the token correct?");
