@@ -18,6 +18,8 @@ import me.maartin0.util.Bot;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
     static void updateCommands() {
@@ -62,6 +64,16 @@ public class Main {
                         .setGuildOnly(true))
                 .updateCommands();
     }
+    static void verboseSave() {
+        System.out.println("Saving...");
+        try {
+            AppConfig.save();
+        } catch (IOException e) {
+            System.out.println("Warning: Unable to save configuration");
+            return;
+        }
+        System.out.println("Saved");
+    }
     static class Listener extends ListenerAdapter {
         @Override
         public void onReady(@NotNull ReadyEvent event) {
@@ -71,12 +83,14 @@ public class Main {
                 System.out.println("Updating global commands...");
                 updateCommands();
                 AppConfig.updateCommands = false;
-                try {
-                    AppConfig.save();
-                } catch (IOException e) {
-                    System.out.println("Warning: Unable to save configuration with updated commands");
-                }
             }
+            long result = Rift.purgeAll();
+            if (result > 0) {
+                System.out.println("Purged " + result + " empty rift(s)");
+                verboseSave();
+            }
+            if (AppConfig.autosave)
+                Executors.newScheduledThreadPool(1).scheduleAtFixedRate(Main::verboseSave, AppConfig.autosaveInterval, AppConfig.autosaveInterval, TimeUnit.MINUTES);
             System.out.println("Ready!");
         }
         @Override
