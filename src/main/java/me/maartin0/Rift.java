@@ -3,6 +3,7 @@ package me.maartin0;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.maartin0.util.AppConfig;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.MissingAccessException;
 import me.maartin0.util.Bot;
@@ -222,6 +223,6 @@ public class Rift {
     }
     public static void saveAll() throws IOException {
         tokenData.data = Rift.serialize();
-        tokenData.save();
+        tokenData.save(AppConfig.debug);
     }
 }
