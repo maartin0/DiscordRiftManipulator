@@ -21,9 +21,9 @@ public class AppConfig {
         config.data.addProperty("update_commands", true);
         config.data.addProperty("autosave", true);
         config.data.addProperty("autosave_interval_minutes", 5);
-        config.data.addProperty("debug_mode_comment", "Don't use ephemeral messages between interactions, show warnings in console");
+        config.data.addProperty("debug_mode_comment", "Dont use ephemeral messages between interactions, show warnings in console");
         config.data.addProperty("debug_mode", false);
-        config.data.addProperty("quiet_comment", "Don't log messages using System.out.println");
+        config.data.addProperty("quiet_comment", "Dont log messages using System.out.println");
         config.data.addProperty("quiet_mode", false);
     }
     public static void load() throws IOException {
@@ -33,7 +33,7 @@ public class AppConfig {
         } catch (IOException e) {
             System.out.println("Config not found; Creating new file.");
             generate();
-            config.save();
+            config.save(true);
         }
         token = config.getString("token");
         prefixRegex = config.getString("prefix_regex");
