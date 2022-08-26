@@ -163,7 +163,7 @@ public class Rift {
                         server.get("manager_id").getAsString(),
                         server.get("prefix").getAsString(),
                         server.get("description").getAsString(),
-                        server.get("invite").getAsString()
+                        server.get("invite") == null ? "" : server.get("invite").getAsString()
                 );
                 server.get("channels").getAsJsonArray().forEach((JsonElement jsonElement) -> {
                     TextChannel channel = guild.getTextChannelById(jsonElement.getAsString());
