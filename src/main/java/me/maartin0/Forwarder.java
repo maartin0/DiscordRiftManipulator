@@ -57,10 +57,10 @@ public class Forwarder {
             client.send(builder.build())
                 .whenCompleteAsync((errorMessage, exception) -> {
                     if (exception == null) return;
-                    channel.guild.warn(Rift.RiftGuild.WarnReason.SEND_MESSAGE);
+                    channel.guild.warn(Rift.RiftGuild.WarnReason.SEND_MESSAGE, errorMessage.getContent());
                 });
         } catch (MissingAccessException e) {
-            channel.guild.warn(Rift.RiftGuild.WarnReason.WEBHOOK);
+            channel.guild.warn(Rift.RiftGuild.WarnReason.WEBHOOK, null);
         }
     }
     public static String getWebhookUsername(String prefix, String username) {

@@ -17,7 +17,7 @@ public class ManagementCommandListener extends ListenerAdapter {
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         switch (event.getCommandPath()) {
             case "create" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 if (Rift.lookupFromChannel(event.getChannel().asTextChannel()).isPresent()) {
                     event.getHook().sendMessage("A rift already exists in this channel! Exiting...").queue();;
                     return;
@@ -49,7 +49,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 event.getHook().sendMessage(message).queue();
                 event.getUser().openPrivateChannel().complete().sendMessage(message).queue();
             } case "join" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 if (Rift.lookupFromChannel(event.getChannel().asTextChannel()).isPresent()) {
                     event.getHook().sendMessage("A rift already exists in this channel! Exiting...").queue();;
                     return;
@@ -77,7 +77,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 );
                 event.getHook().sendMessage("Success created joined \"%s\"!".formatted(rift.name)).queue();
             } case "leave" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
                 if (riftOptional.isEmpty()) {
                     event.getHook().sendMessage("There's no rift here!").queue();
@@ -87,7 +87,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 rift.removeChannel(event.getChannel().asTextChannel());
                 event.getHook().sendMessage("Success!").queue();
             } case "modify/global/name" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 OptionMapping name = event.getOption("name");
                 if (name == null) {
                     event.getHook().sendMessage("Unable to get provided options").queue();
@@ -106,7 +106,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 rift.name = name.getAsString();
                 event.getHook().sendMessage("Success! You may also want to run `/reload global description`;").queue();
             } case "modify/global/description" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 OptionMapping description = event.getOption("description");
                 if (description == null) {
                     event.getHook().sendMessage("Unable to get provided options").queue();
@@ -125,7 +125,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 rift.description = description.getAsString();
                 event.getHook().sendMessage("Success! You may also want to run `/reload description`;").queue();
             } case "modify/prefix" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 OptionMapping prefix = event.getOption("prefix");
                 if (prefix == null) {
                     event.getHook().sendMessage("Unable to get provided options").queue();
@@ -149,7 +149,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 riftChannel.guild.prefix = prefix.getAsString();
                 event.getHook().sendMessage("Success! You may also want to to run `/reload (global) description`;").queue();
             } case "modify/description" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 OptionMapping description = event.getOption("description");
                 if (description == null) {
                     event.getHook().sendMessage("Unable to get provided options").queue();
@@ -170,7 +170,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 riftChannel.guild.description = description.getAsString();
                 event.getHook().sendMessage("Success! You may also want to to run `/reload description`;").queue();
             } case "modify/invite" -> {
-                event.deferReply(true).queue();
+                event.deferReply(!AppConfig.debug).queue();
                 OptionMapping invite = event.getOption("code");
                 if (invite == null) {
                     event.getHook().sendMessage("Unable to get provided options").queue();

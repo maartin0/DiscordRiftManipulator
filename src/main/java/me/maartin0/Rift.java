@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.exceptions.MissingAccessException;
 import me.maartin0.util.Bot;
 import me.maartin0.util.JsonFile;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,14 +42,27 @@ public class Rift {
             + "description: " + description + "\n}";
         }
         public enum WarnReason {
-            WEBHOOK,
-            SEND_MESSAGE,
-            EDIT_MESSAGE,
-            DELETE_MESSAGE
+            WEBHOOK("fetching webhook(s)"),
+            SEND_MESSAGE("sending message(s)"),
+            EDIT_MESSAGE("editing message(s)"),
+            DELETE_MESSAGE("deleting message(s)");
+            final String when;
+            WarnReason(String when) {
+                this.when = when;
+            }
         }
-        public void warn(WarnReason reason) {
-            // TODO
-            System.out.println("Warning generated (method not implemented): " + reason);
+        public void warn(WarnReason reason, @Nullable String errorMessage) {
+            StringBuilder message = new StringBuilder();
+            message.append("An error occurred when ").append(reason.when).append(".");
+            if (errorMessage != null) message.append(":\n").append(errorMessage);
+            if (AppConfig.debug) Main.log(message);
+            Member guildOwner = guild.getOwner();
+            if (guildOwner == null) return;
+            guildOwner.getUser()
+                    .openPrivateChannel()
+                    .complete()
+                    .sendMessage(message.toString())
+                    .queue();
         }
         public static String generatePrefix(String guildName) {
             return guildName.chars()

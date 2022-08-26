@@ -71,57 +71,65 @@ public class Main {
                 .updateCommands();
     }
     static void verboseSave() {
-        System.out.println("Saving...");
+        Main.log("Saving...");
         try {
             Rift.saveAll();
         } catch (IOException e) {
-            System.out.println("Warning: Unable to save rift data");
+            Main.log("Warning: Unable to save rift data");
             return;
         }
-        System.out.println("Saved");
+        Main.log("Saved");
+    }
+    public static void log(Object message) {
+        log(message, false);
+    }
+    public static void log(Object message, boolean important) {
+        if (important && !AppConfig.quiet) {
+            System.out.println(message);
+        }
     }
     static class Listener extends ListenerAdapter {
         @Override
         public void onReady(@NotNull ReadyEvent event) {
-            System.out.println("Loading rifts from storage...");
+            Main.log("Loading rifts from storage...");
             Rift.loadAll();
             if (AppConfig.updateCommands) {
-                System.out.println("Updating global commands...");
+                Main.log("Updating global commands...");
                 updateCommands();
                 AppConfig.updateCommands = false;
                 try {
                     AppConfig.save();
                 } catch (IOException e) {
-                    System.out.println("Warning: Unable to save app config");
+                    Main.log("Warning: Unable to save app config");
                     return;
                 }
             }
             long result = Rift.purgeAll();
             if (result > 0) {
-                System.out.println("Purged " + result + " empty rift(s)");
+                Main.log("Purged " + result + " empty rift(s)");
                 verboseSave();
             }
             if (AppConfig.autosave)
                 Executors.newScheduledThreadPool(1).scheduleAtFixedRate(Main::verboseSave, AppConfig.autosaveInterval, AppConfig.autosaveInterval, TimeUnit.MINUTES);
-            System.out.println("Ready!");
+            Main.log("Ready!", true);
         }
         @Override
         public void onShutdown(@NotNull ShutdownEvent event) {
-            System.out.println("Saving data...");
+            Main.log("Saving data...");
             try {
                 Rift.saveAll();
             } catch (IOException e) {
-                System.out.println("An error occurred while trying to save rift data");
+                Main.log("An error occurred while trying to save rift data");
                 e.printStackTrace();
             }
-            System.out.println("Saving finished");
+            Main.log("Saving finished");
         }
     }
     public static void main(String[] args) throws IOException, InstantiationException {
-        System.out.println("Loading config...");
+        Main.log("Loading config...", true);
         AppConfig.load();
         try {
-            System.out.println("Initializing bot...");
+            Main.log("Initializing bot...");
             Bot.load(
                 AppConfig.token,
                 new Forwarder.Listener(),
@@ -131,7 +139,7 @@ public class Main {
                 new Listener()
             );
         } catch (LoginException e) {
-            System.out.println("Unable to load bot, is the token correct?");
+            Main.log("Unable to load bot, is the token correct?", true);
         }
     }
 }
