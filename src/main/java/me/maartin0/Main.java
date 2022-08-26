@@ -73,9 +73,9 @@ public class Main {
     static void verboseSave() {
         System.out.println("Saving...");
         try {
-            AppConfig.save();
+            Rift.saveAll();
         } catch (IOException e) {
-            System.out.println("Warning: Unable to save configuration");
+            System.out.println("Warning: Unable to save rift data");
             return;
         }
         System.out.println("Saved");
@@ -89,6 +89,12 @@ public class Main {
                 System.out.println("Updating global commands...");
                 updateCommands();
                 AppConfig.updateCommands = false;
+                try {
+                    AppConfig.save();
+                } catch (IOException e) {
+                    System.out.println("Warning: Unable to save app config");
+                    return;
+                }
             }
             long result = Rift.purgeAll();
             if (result > 0) {
