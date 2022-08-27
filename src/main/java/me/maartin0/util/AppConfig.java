@@ -16,7 +16,7 @@ public class AppConfig {
         config.data = new JsonObject();
         config.data.addProperty("token", "");
         config.data.addProperty("prefix_regex_comment", "The regex used to validate prefixes");
-        config.data.addProperty("prefix_regex", "[A-Za-zÀ-ÖØ-öø-ÿ0-9\\-_]");
+        config.data.addProperty("prefix_regex", "[A-Za-zÀ-ÖØ-öø-ÿ0-9\\-_]{1,5}");
         config.data.addProperty("update_commands_comment", "Set this value to true to force an update of global commands on the next restart, this property will automatically be set to false afterwards.");
         config.data.addProperty("update_commands", true);
         config.data.addProperty("autosave", true);

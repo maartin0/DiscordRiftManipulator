@@ -107,7 +107,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                     return;
                 }
                 rift.name = name.getAsString();
-                event.getHook().sendMessage("Success! You may also want to run `/reload global description`;").queue();
+                event.getHook().sendMessage("Success!").queue();
             } case "modify/global/description" -> {
                 event.deferReply(!AppConfig.debug).queue();
                 OptionMapping description = event.getOption("description");
@@ -126,7 +126,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                     return;
                 }
                 rift.description = description.getAsString();
-                event.getHook().sendMessage("Success! You may also want to run `/reload description`;").queue();
+                event.getHook().sendMessage("Success!").queue();
             } case "modify/prefix" -> {
                 event.deferReply(!AppConfig.debug).queue();
                 OptionMapping prefix = event.getOption("prefix");
@@ -150,7 +150,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 }
                 Rift.RiftChannel riftChannel = optionalRiftChannel.get();
                 riftChannel.guild.prefix = prefix.getAsString();
-                event.getHook().sendMessage("Success! You may also want to to run `/reload (global) description`;").queue();
+                event.getHook().sendMessage("Success!").queue();
             } case "modify/description" -> {
                 event.deferReply(!AppConfig.debug).queue();
                 OptionMapping description = event.getOption("description");
@@ -171,7 +171,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 }
                 Rift.RiftChannel riftChannel = optionalRiftChannel.get();
                 riftChannel.guild.description = description.getAsString();
-                event.getHook().sendMessage("Success! You may also want to to run `/reload description`;").queue();
+                event.getHook().sendMessage("Success!").queue();
             } case "modify/invite" -> {
                 event.deferReply(!AppConfig.debug).queue();
                 OptionMapping invite = event.getOption("code");
@@ -192,7 +192,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                 }
                 Rift.RiftChannel riftChannel = optionalRiftChannel.get();
                 riftChannel.guild.invite = invite.getAsString();
-                event.getHook().sendMessage("Success! You may also want to to run `/reload (global) description`;").queue();
+                event.getHook().sendMessage("Success!").queue();
             }
         }
         try {
