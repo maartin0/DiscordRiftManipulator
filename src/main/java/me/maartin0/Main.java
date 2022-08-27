@@ -50,27 +50,26 @@ public class Main {
                                                 .addOption(OptionType.STRING, "code", "guild invite code", true))
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
                         .setGuildOnly(true))
-                .command(Commands.slash("purge", "Purge x messages globally") // TODO
-                        .addOption(OptionType.NUMBER, "number", "number of messages to purge", true)
+                .command(Commands.slash("purge", "Purge x messages globally")
+                        .addOption(OptionType.INTEGER, "number", "number of messages to purge", true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
-                .command(Commands.slash("reload", "Reload items") // TODO
-                        .addSubcommandGroups(new SubcommandGroupData("global", "Globally reload items")
-                                .addSubcommands(new SubcommandData("description", "Globally reload descriptions")))
-                        .addSubcommands(new SubcommandData("description", "Reload local description"))
-                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .command(Commands.slash("info", "Get information about the current rift")
                         .setGuildOnly(true))
-                .command(Commands.message("Delete message") // TODO
+                .command(Commands.slash("description", "Effectively pastes the output of /info into the channel description")
+                        .setGuildOnly(true)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)))
+                .command(Commands.message("Delete message")
                         .setGuildOnly(true))
-                .command(Commands.message("Pin message") // TODO
+                .command(Commands.message("Pin message")
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE))
                         .setGuildOnly(true))
-                .command(Commands.user("Toggle mute") // TODO
+                .command(Commands.user("Toggle mute")
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS))
                         .setGuildOnly(true))
                 .updateCommands();
     }
-    static void verboseSave() {
+    public static void save() {
         Main.log("Saving...");
         try {
             Rift.saveAll();
@@ -84,7 +83,7 @@ public class Main {
         log(message, false);
     }
     public static void log(Object message, boolean important) {
-        if (important && !AppConfig.quiet) {
+        if (important || !AppConfig.quiet) {
             System.out.println(message);
         }
     }
@@ -107,10 +106,10 @@ public class Main {
             long result = Rift.purgeAll();
             if (result > 0) {
                 Main.log("Purged " + result + " empty rift(s)");
-                verboseSave();
             }
+            save();
             if (AppConfig.autosave)
-                Executors.newScheduledThreadPool(1).scheduleAtFixedRate(Main::verboseSave, AppConfig.autosaveInterval, AppConfig.autosaveInterval, TimeUnit.MINUTES);
+                Executors.newScheduledThreadPool(1).scheduleAtFixedRate(Main::save, AppConfig.autosaveInterval, AppConfig.autosaveInterval, TimeUnit.MINUTES);
             Main.log("Ready!", true);
         }
         @Override

@@ -15,9 +15,11 @@ import org.jetbrains.annotations.NotNull;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-// TODO: Forward reactions
+
 public class Forwarder {
     public static class Listener extends ListenerAdapter {
         @Override
@@ -35,6 +37,15 @@ public class Forwarder {
         if (optionalRift.isEmpty()) return;
         this.rift = optionalRift.get();
 
+        if (this.rift.isMuted(origin.getAuthor())) {
+            origin.delete().queue();
+            origin.getChannel()
+                    .sendMessage("%s you've been muted on this rift by a moderator!".formatted(
+                            origin.getAuthor().getAsMention()
+                    )).queue((Message sent) -> sent.delete().queueAfter(10, TimeUnit.SECONDS));
+            return;
+        }
+
         this.origin = origin;
         Optional<Rift.RiftChannel> optionalRiftChannel = rift.getRiftChannel(origin.getChannel().asTextChannel());
         if (optionalRiftChannel.isEmpty()) return;
@@ -47,12 +58,12 @@ public class Forwarder {
                 .filter((Rift.RiftChannel channel) -> channel.channel.getIdLong() != origin.getChannel().getIdLong())
                 .forEach((Rift.RiftChannel channel) -> send(channel, getWebhookUsername(), getWebhookMessageContent(), getWebhookMessageAttachments()));
     }
-    void send(Rift.RiftChannel channel, String username, String content, Collection<InputStream> attachments) {
+    void send(Rift.RiftChannel channel, String username, String content, Collection<InputStream> images) {
         WebhookMessageBuilder builder = new WebhookMessageBuilder();
         builder.setAvatarUrl(origin.getAuthor().getAvatarUrl());
         builder.setUsername(username);
         builder.setContent(content);
-        attachments.forEach((InputStream stream) -> builder.addFile("attachment.png", stream));
+        images.forEach((InputStream stream) -> builder.addFile("attachment.png", stream));
         try (WebhookClient client = WebhookClientBuilder.fromJDA(channel.getWebhook()).build()) {
             client.send(builder.build())
                 .whenCompleteAsync((errorMessage, exception) -> {
@@ -76,7 +87,6 @@ public class Forwarder {
     }
     public static String getWebhookMessageContent(Message message) {
         StringBuilder contentBuilder = new StringBuilder();
-
         // Reply
         Message referencedMessage = message.getReferencedMessage();
         if (referencedMessage != null) {
@@ -92,13 +102,15 @@ public class Forwarder {
                     .append(getDiscriminatedUsername(referencedMessage.getAuthor()))
                     .append(System.lineSeparator());
         }
-
         // Content
         contentBuilder.append(message.getContentRaw())
                 .append(System.lineSeparator());
-
         // Non-image attachments
-        // TODO: Get non-image attachment urls
+        message.getAttachments()
+                .stream()
+                .filter(Predicate.not(Message.Attachment::isImage))
+                .map(Message.Attachment::getUrl)
+                .forEach(contentBuilder::append);
         return contentBuilder.toString();
     }
     String getWebhookMessageContent() {
@@ -119,8 +131,9 @@ public class Forwarder {
                 .forEach(result::add);
         origin.getAttachments()
                 .stream()
+                .filter(Message.Attachment::isImage)
                 .map(Message.Attachment::getProxy)
-                .forEach(result::add); // TODO: Filter image attachments
+                .forEach(result::add);
         return result.stream()
                 .map(Forwarder::getInputStream)
                 .filter(Optional::isPresent)

@@ -1,5 +1,6 @@
 package me.maartin0.interactions;
 
+import me.maartin0.Main;
 import me.maartin0.Rift;
 import me.maartin0.util.AppConfig;
 import net.dv8tion.jda.api.entities.Guild;
@@ -8,6 +9,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,6 +40,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                     name.getAsString(),
                     description.getAsString(),
                     guild.getId(),
+                    new ArrayList<>(),
                     new ArrayList<>()
                 );
                 rift.addChannel(
@@ -75,7 +78,7 @@ public class ManagementCommandListener extends ListenerAdapter {
                         event.getUser(),
                         rift.description
                 );
-                event.getHook().sendMessage("Success created joined \"%s\"!".formatted(rift.name)).queue();
+                event.getHook().sendMessage("Success joined \"%s\"!".formatted(rift.name)).queue();
             } case "leave" -> {
                 event.deferReply(!AppConfig.debug).queue();
                 Optional<Rift> riftOptional = Rift.lookupFromChannel(event.getChannel().asTextChannel());
@@ -188,9 +191,16 @@ public class ManagementCommandListener extends ListenerAdapter {
                     return;
                 }
                 Rift.RiftChannel riftChannel = optionalRiftChannel.get();
-                riftChannel.guild.invite = "https://discord.gg/%s".formatted(invite.getAsString());
+                riftChannel.guild.invite = invite.getAsString();
                 event.getHook().sendMessage("Success! You may also want to to run `/reload (global) description`;").queue();
             }
+        }
+        try {
+            Rift.reloadAll();
+        } catch (IOException e) {
+            event.getHook().sendMessage("An internal error occurred").queue();
+            Main.log("An error occurred while reloading: ");
+            Main.log(e.getStackTrace());
         }
     }
 }

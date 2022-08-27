@@ -1,5 +1,6 @@
 package me.maartin0;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -10,12 +11,8 @@ import me.maartin0.util.Bot;
 import me.maartin0.util.JsonFile;
 
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -71,6 +68,12 @@ public class Rift {
                     .map(Object::toString)
                     .collect(Collectors.joining());
         }
+        public String getDisplayString() {
+            StringBuilder result = new StringBuilder();
+            result.append("[").append(prefix).append("]").append(" - ").append(guild.getName());
+            if (invite.length() > 0) result.append(": https://discord.gg/").append(invite);
+            return result.toString();
+        }
     }
     public static class RiftChannel {
         public RiftGuild guild;
@@ -97,12 +100,27 @@ public class Rift {
     public String description;
     public String primaryGuildId;
     public Collection<RiftChannel> channels;
-    public Rift(String token, String name, String description, String primaryGuildId, Collection<RiftChannel> channels) {
+    public Collection<String> mutes;
+    public boolean isMuted(User user) {
+        return mutes.contains(user.getId());
+    }
+    public void mute(User user) {
+        if (!isMuted(user)) {
+            mutes.add(user.getId());
+        }
+    }
+    public void unmute(User user) {
+        if (isMuted(user)) {
+            mutes.remove(user.getId());
+        }
+    }
+    public Rift(String token, String name, String description, String primaryGuildId, Collection<RiftChannel> channels, Collection<String> mutes) {
         this.token = token;
         this.name = name;
         this.description = description;
         this.primaryGuildId = primaryGuildId;
         this.channels = channels;
+        this.mutes = mutes;
         // Populate lookup map
         this.channels.forEach((RiftChannel channel) -> {
             Map<String, Rift> stored = lookup.get(channel.guild.guild.getId());
@@ -146,6 +164,18 @@ public class Rift {
             return true;
         }
         return false;
+    }
+    public String getInfo() {
+        StringBuilder result = new StringBuilder();
+        result.append(this.name).append("\n\n")
+                .append(this.description).append("\n\n")
+                .append("=".repeat(30)).append("\n\n");
+        channels.stream()
+                .map((RiftChannel channel) -> channel.guild)
+                .distinct()
+                .map(RiftGuild::getDisplayString)
+                .forEach((String line) -> result.append(line).append("\n"));
+        return result.toString();
     }
     public void delete() {
         deleteRift(this);
@@ -196,7 +226,8 @@ public class Rift {
                     object.get("name").getAsString(),
                     object.get("description").getAsString(),
                     object.get("creator_guild").getAsString(),
-                    channels
+                    channels,
+                    object.get("mutes") == null ? new ArrayList<>() : new ArrayList<>(Arrays.asList(new Gson().fromJson(object.getAsJsonArray("mutes"), String[].class)))
             );
         });
     }
@@ -210,6 +241,9 @@ public class Rift {
             riftObject.addProperty("name", rift.name);
             riftObject.addProperty("description", rift.description);
             riftObject.addProperty("creator_guild", rift.primaryGuildId);
+            JsonArray mutes = new JsonArray();
+            rift.mutes.forEach(mutes::add);
+            riftObject.add("mutes", mutes);
             JsonObject serversObject = new JsonObject();
             rift.channels.forEach((RiftChannel channel) -> {
                 JsonElement storedElement = serversObject.get(channel.guild.guild.getId());
@@ -238,5 +272,9 @@ public class Rift {
     public static void saveAll() throws IOException {
         tokenData.data = Rift.serialize();
         tokenData.save(AppConfig.debug);
+    }
+    public static void reloadAll() throws IOException {
+        saveAll();
+        loadAll();
     }
 }
