@@ -103,7 +103,7 @@ public class Forwarder {
                     .append(System.lineSeparator());
         }
         // Content
-        contentBuilder.append(message.getContentRaw())
+        contentBuilder.append(message.getContentDisplay().replace("@", "@ "))
                 .append(System.lineSeparator());
         // Non-image attachments
         message.getAttachments()
