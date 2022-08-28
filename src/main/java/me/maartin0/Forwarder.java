@@ -103,7 +103,7 @@ public class Forwarder {
                     .append(System.lineSeparator());
         }
         // Content
-        contentBuilder.append(message.getContentDisplay().replace("@", "@ "))
+        contentBuilder.append(message.getContentDisplay())
                 .append(System.lineSeparator());
         // Non-image attachments
         message.getAttachments()
@@ -111,7 +111,7 @@ public class Forwarder {
                 .filter(Predicate.not(Message.Attachment::isImage))
                 .map(Message.Attachment::getUrl)
                 .forEach(contentBuilder::append);
-        return contentBuilder.toString();
+        return contentBuilder.toString().replace("@", "@ ");
     }
     String getWebhookMessageContent() {
         return getWebhookMessageContent(origin);

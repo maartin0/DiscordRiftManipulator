@@ -3,9 +3,8 @@ package me.maartin0.interactions;
 import me.maartin0.Rift;
 import me.maartin0.Searcher;
 import me.maartin0.util.AppConfig;
-import net.dv8tion.jda.api.entities.Channel;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
@@ -13,6 +12,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,6 +83,31 @@ public class UtilCommandListener extends ListenerAdapter {
                     .map(Message::pin)
                     .forEach(RestAction::queue);
             event.getHook().sendMessage("Pinned %s messages (note, this action is not reversible)".formatted(size)).queue();
+        } else if (event.getCommandPath().equalsIgnoreCase("delete message")) {
+            User messageAuthor = event.getTarget().getAuthor();
+            Member requester = event.getMember();
+            if (requester == null) {
+                event.getHook().sendMessage("Invalid request.").queue();
+                return;
+            }
+            if (
+                    (messageAuthor.isBot()
+                    || messageAuthor.isSystem()
+                    || messageAuthor.getIdLong() != requester.getIdLong())
+                    && !requester.hasPermission(Permission.MESSAGE_MANAGE)) {
+                    event.getHook().sendMessage("You don't have permission to use this command!").queue();
+                    return;
+            }
+            Rift rift = handleRiftInteraction(event);
+            if (rift == null) return;
+            Collection<Message> result = new Searcher(event.getTarget())
+                    .search()
+                    .get();
+            int size = result.size();
+            result.stream()
+                    .map(Message::delete)
+                    .forEach(AuditableRestAction::queue);
+            event.getHook().sendMessage("Removed %s messages".formatted(size)).queue();
         }
     }
 }

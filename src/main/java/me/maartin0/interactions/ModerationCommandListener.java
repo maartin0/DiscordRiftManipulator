@@ -56,20 +56,4 @@ public class ModerationCommandListener extends ListenerAdapter {
             Main.save();
         }
     }
-
-    @Override
-    public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
-        if (event.getCommandPath().equalsIgnoreCase("delete message")) {
-            Rift rift = handleRiftInteraction(event);
-            if (rift == null) return;
-            Collection<Message> result = new Searcher(event.getTarget())
-                    .search()
-                    .get();
-            int size = result.size();
-            result.stream()
-                    .map(Message::delete)
-                    .forEach(AuditableRestAction::queue);
-            event.getHook().sendMessage("Removed %s messages".formatted(size)).queue();
-        }
-    }
 }

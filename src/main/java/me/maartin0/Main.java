@@ -44,8 +44,6 @@ public class Main {
                                                     .addOption(OptionType.STRING, "description", "global rift description", true)))
                         .addSubcommands(new SubcommandData("prefix", "Modify the guild's prefix")
                                             .addOption(OptionType.STRING, "prefix", "guild prefix", true),
-                                        new SubcommandData("description", "Modify the local channel description")
-                                            .addOption(OptionType.STRING, "description", "local channel description", true),
                                         new SubcommandData("invite", "Modify the invite code for the guild (NOT the URL)")
                                                 .addOption(OptionType.STRING, "code", "guild invite code", true))
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
